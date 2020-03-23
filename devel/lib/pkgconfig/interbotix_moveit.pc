@@ -1,0 +1,8 @@
+prefix=/home/jonathan/Desktop/Projects/WidowX200_RL/devel
+
+Name: interbotix_moveit
+Description: Description of interbotix_moveit
+Version: 0.3.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

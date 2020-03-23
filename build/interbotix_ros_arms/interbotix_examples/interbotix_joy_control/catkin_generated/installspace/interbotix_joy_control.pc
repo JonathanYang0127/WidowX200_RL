@@ -1,0 +1,8 @@
+prefix=/home/jonathan/Desktop/Projects/WidowX200_RL/install
+
+Name: interbotix_joy_control
+Description: Description of interbotix_joy_control
+Version: 0.0.0
+Cflags: -I${prefix}/include
+Libs: -L${prefix}/lib 
+Requires: interbotix_sdk joy message_runtime roscpp rospy sensor_msgs std_msgs
