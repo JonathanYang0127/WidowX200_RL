@@ -1,0 +1,7 @@
+setup.py
+src/widowx200_core/params.py
+src/widowx200_core/widowx_controller.py
+src/widowx200_core.egg-info/PKG-INFO
+src/widowx200_core.egg-info/SOURCES.txt
+src/widowx200_core.egg-info/dependency_links.txt
+src/widowx200_core.egg-info/top_level.txt
