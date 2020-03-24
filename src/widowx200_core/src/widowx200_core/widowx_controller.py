@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from params import *
+from ik import InverseKinematics
 import rospy
 from interbotix_sdk.msg import SingleCommand, JointCommands
 
@@ -11,6 +12,8 @@ class WidowXController:
         self._multiple_joints_pub = rospy.Publisher('/wx200/joint/commands', JointCommands, queue_size = 1)
         rospy.sleep(2.0)
 
+        self._ik = InverseKinematics()
+
 
     def move_to_target_joints(self, joint_values):
         '''
@@ -21,7 +24,8 @@ class WidowXController:
 
 
     def move_to_neutral(self):
-        '''
+        '''    widowx_controller.move_gripper(action[-1])
+
         Move arm to neutral position
         '''
         self.move_to_target_joints(NEUTRAL_JOINTS)
@@ -32,6 +36,11 @@ class WidowXController:
         Move arm to reset position
         '''
         self.move_to_target_joints(RESET_JOINTS)
+
+
+    def move_gripper(self, cmd):
+        self._single_joint_pub.publish(SingleCommand('gripper', cmd))
+        rospy.sleep(1.0)
 
 
     def open_gripper(self):
@@ -46,6 +55,8 @@ class WidowXController:
 
 if __name__ == '__main__':
     controller = WidowXController()
+    controller.move_gripper(0)
+    controller.move_to_neutral()
     controller.move_to_target_joints([0, 0, 0, 0, 0])
     controller.open_gripper()
     rospy.sleep(1.0)
@@ -53,4 +64,5 @@ if __name__ == '__main__':
     rospy.sleep(1.0)
     controller.move_to_neutral()
     controller.move_to_reset()
+    controller.open_gripper()
     rospy.spin()

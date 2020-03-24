@@ -11,7 +11,6 @@ class InverseKinematics():
     def __init__(self):
         p.connect(p.DIRECT)
         widow_x_urdf = '/'.join(__file__.split('/')[:-1]) + '/../../widowx200_urdf/wx200.urdf'
-        print(widow_x_urdf)
         self._armID = p.loadURDF(widow_x_urdf, useFixedBase=True)
         p.resetBasePositionAndOrientation(self._armID, [0, 0, 0], p.getQuaternionFromEuler([np.pi, np.pi, np.pi]))
 
@@ -20,6 +19,7 @@ class InverseKinematics():
         joint_state_subscriber = rospy.Subscriber("/wx200/joint_states", JointState, self._joint_callback)
         rospy.sleep(2.0)
 
+
     def _reset_pybullet(self):
         '''
         Reset pybullet sim to current joint angles
@@ -27,11 +27,13 @@ class InverseKinematics():
         for i, angle in enumerate(self.get_joint_angles()):
             p.resetJointState(self._armID, i, angle)
 
+
     def _joint_callback(self, msg):
         with self._joint_lock:
             for name, position, velocity in zip(msg.name, msg.position, msg.velocity):
                 self._angles[name] = position
                 self._velocities[name] = velocity
+
 
     def get_joint_angles(self):
         '''
@@ -44,6 +46,7 @@ class InverseKinematics():
             except KeyError:
                 return None
 
+
     def get_joint_angles_velocity(self):
         '''
         Returns velocities for joints
@@ -54,6 +57,7 @@ class InverseKinematics():
                 return np.array([self._velocities[k] for k in joints_ret])
             except KeyError:
                 return None
+
 
     def get_gripper_state(self, integrate_force=False):
         '''#Returns cartesian end-effector pose
@@ -72,6 +76,7 @@ class InverseKinematics():
         self._reset_pybullet()
         position, quat = p.getLinkState(self._armID, 5, computeForwardKinematics=1)[4:6]
         return np.array(list(position) + list(quat))
+
 
     def _calculate_ik(self, targetPos, targetQuat, threshold=1e-5, maxIter=1000, nJoints=6):
         '''
@@ -100,8 +105,11 @@ class InverseKinematics():
 
         return best_ret
 
+
 if __name__ == '__main__':
-    rospy.init_node("IK_Node")
+    rospy.init_node('IK_Node')
     k = InverseKinematics()
     #rospy.spin()
-    print(InverseKinematics().get_cartesian_pose())
+    pose= k.get_cartesian_pose()
+    print(pose)
+    print('Neutral Pose', k._calculate_ik(pose[:3], [pose][4:]))

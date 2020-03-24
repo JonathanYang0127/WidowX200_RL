@@ -15,18 +15,67 @@ import random
 class WidowX200EnvJoint(gym.Env):
     def __init__(self):
         #Normalized action space
-        self.action_space = spaces.Box(low=np.array([-0.5, -0.25, -0.25, -0.25, -0.5, 0.0 / 3]),
+        self.action_space = spaces.Box(low=np.array([-0.5, -0.25, -0.25, -0.25, -0.5, -1.0 / 3]),
                                        high=np.array([0.5, 0.25, 0.25, 0.25, 0.5, 2.0 / 3]), dtype=np.float32)
+
+        self.obs_mode = 'verbose'   #CHANGE
+        self.goal = None          #CHANGE
 
 
     def reset(self):
         self.reset_publisher.publish("OPEN_GRIPPER")
+        rospy.sleep(3.0)
 
+
+    def step(self, action):
+        '''
+        TODO: Get action bounds and enforce them
+        '''
+        action = np.array(action, dtype='float32')
+        action[5] *= 3
+        self.action_publisher.publish(action)
+        self.current_pos = np.array(rospy.wait_for_message(
+            "/widowx_env/action/observation", numpy_msg(Floats)).data)
+        rospy.sleep(0.2)
+        return self._generate_step_tuple()
+
+
+    def _generate_step_tuple(self):
+        reward = self._get_reward()
+        episode_over = False
+        info = {}
+
+        return self._get_obs(), reward, episode_over, info
+
+
+    def _get_obs(self):
+        '''
+        TODO: Set image obs
+        '''
+        #assert self.original_image is not None
+        obs = {}
+
+        if self.obs_mode == 'verbose':
+            obs['observation'] = self.current_pos[:3]
+            obs['joints'] = self.current_pos[3:9]
+            obs['desired_goal'] = self.goal
+            obs['achieved_goal'] = self.current_pos[:3]
+            obs['gripper'] = self.current_pos[8]
+
+        obs['image'] = None #np.append(self._get_rgb(), self.original_image, axis=2)
+        obs['state'] =  self.current_pos[3:9]
+        return obs
+
+
+    def _get_reward(self):
+        return 0
 
     def _start_rospy(self):
         rospy.init_node("WidowX200_Env")
         self.reset_publisher = rospy.Publisher(
             "/widowx_env/reset", String, queue_size=1)
+        self.action_publisher = rospy.Publisher(
+            "/widowx_env/action", numpy_msg(Floats), queue_size=1)
         rospy.sleep(2.0)
 
         return self
