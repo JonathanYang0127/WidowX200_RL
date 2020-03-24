@@ -14,20 +14,26 @@ class WidowXController:
 
     def move_to_target_joints(self, joint_values):
         '''
-        Moves to specified joint values
+        Move arm to specified joint values
         '''
         self._multiple_joints_pub.publish(JointCommands(joint_values))
         rospy.sleep(1.0)
 
 
     def move_to_neutral(self):
+        '''
+        Move arm to neutral position
+        '''
         self.move_to_target_joints(NEUTRAL_JOINTS)
- 
 
-    def move_to_reset(self):     
+
+    def move_to_reset(self):
+        '''
+        Move arm to reset position
+        '''
         self.move_to_target_joints(RESET_JOINTS)
 
- 
+
     def open_gripper(self):
         self._single_joint_pub.publish(SingleCommand('gripper', GRIPPER_OPEN))
         rospy.sleep(1.0)
@@ -37,7 +43,7 @@ class WidowXController:
         self._single_joint_pub.publish(SingleCommand('gripper', GRIPPER_CLOSED))
         rospy.sleep(1.0)
 
-    
+
 if __name__ == '__main__':
     controller = WidowXController()
     controller.move_to_target_joints([0, 0, 0, 0, 0])
