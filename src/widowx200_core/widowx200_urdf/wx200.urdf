@@ -138,7 +138,7 @@
   </link>
   <joint name="wrist_angle" type="revolute">
     <axis xyz="0 1 0"/>
-    <limit effort="100" lower="-2.1467549799530254" upper="1.7453292519943295" velocity="3.141592653589793"/>
+    <limit effort="100" lower="0.8" upper="1.7453292519943295" velocity="3.141592653589793"/>
     <origin rpy="0 0 0" xyz="0.2 0 0"/>
     <parent link="wx200/forearm_link"/>
     <child link="wx200/wrist_link"/>

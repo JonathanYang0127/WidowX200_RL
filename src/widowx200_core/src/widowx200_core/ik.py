@@ -1,7 +1,7 @@
 import numpy as np
 import pybullet as p
 import rospy
-from params import *
+from widowx200_core.params import *
 from sensor_msgs.msg import JointState
 from threading import Lock
 import time
@@ -40,7 +40,7 @@ class InverseKinematics():
         Returns current joint angles
         '''
         with self._joint_lock:
-            joints_ret = JOINT_NAMES # last elem used to be 'gripper_revolute_joint'
+            joints_ret = ['waist', 'shoulder', 'elbow', 'wrist_angle', 'wrist_rotate', 'gripper'] # last elem used to be 'gripper_revolute_joint'
             try:
                 return np.array([self._angles[k] for k in joints_ret])
             except KeyError:
@@ -52,7 +52,7 @@ class InverseKinematics():
         Returns velocities for joints
         '''
         with self._joint_lock:
-            joints_ret = JOINT_NAMES
+            joints_ret = ['waist', 'shoulder', 'elbow', 'wrist_angle', 'wrist_rotate', 'gripper']
             try:
                 return np.array([self._velocities[k] for k in joints_ret])
             except KeyError:
@@ -87,6 +87,7 @@ class InverseKinematics():
         dist2 = None
 
         best_ret, best_dist = None, float('inf')
+        #p.resetJointState(self._armID, 0, -self.get_joint_angles()[0])]
 
         while (not closeEnough and iter_count < maxIter):
             jointPoses = list(p.calculateInverseKinematics(self._armID, 5, targetPos, targetQuat, JOINT_MIN, JOINT_MAX))
@@ -106,10 +107,14 @@ class InverseKinematics():
         return best_ret
 
 
+    def _ik_wrapper(self, targetPos, targetQuat, threshold=1e-5, maxIter=1000, nJoints=6):
+        pos, quat = self.get_cartesian_pose()
+
+
 if __name__ == '__main__':
     rospy.init_node('IK_Node')
     k = InverseKinematics()
     #rospy.spin()
-    pose= k.get_cartesian_pose()
+    pose = k.get_cartesian_pose()
     print(pose)
     print('Neutral Pose', k._calculate_ik(pose[:3], [pose][4:]))

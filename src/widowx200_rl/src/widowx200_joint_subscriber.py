@@ -51,13 +51,17 @@ def take_action(data):
     action = action[:-1]
     target_joints = widowx_controller._ik.get_joint_angles()[:5] + action
     widowx_controller.move_to_target_joints(target_joints)
-    widowx_controller.move_gripper(gripper_action)
+    widowx_controller.move_gripper(gripper_action * 3)
     current_state = np.array(get_state(), dtype=np.float32)
+    rospy.sleep(0.02)
     observation_publisher.publish(current_state)
 
 
 def reset(data):
+    widowx_controller.move_to_neutral()
+    rospy.sleep(1.5)
     widowx_controller.move_to_reset()
+    rospy.sleep(1.0)
     if data.data != "NO_GRIPPER":
         widowx_controller.open_gripper()
 

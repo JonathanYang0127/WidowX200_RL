@@ -6,10 +6,17 @@ import pickle
 from distutils.util import strtobool
 import math
 import time
-from .color_pc_clusters import *
-from .kinect_image_service import *
+#from .color_pc_clusters import *
+#from .kinect_image_service import *
 from math import asin, sin, cos, sqrt, acos
 
+
+def compute_ik_command(action, ik):
+    pose = ik.get_cartesian_pose()
+    pos = pose[:3]
+    quat = pose[3:]
+    pos += action
+    return ik._calculate_ik(pos, quat)[0][:5] - ik.get_joint_angles()[:5]
 
 def timestamp(divider='-', datetime_divider='T'):
     now = datetime.datetime.now()

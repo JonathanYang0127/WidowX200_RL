@@ -20,12 +20,11 @@ class WidowXController:
         Move arm to specified joint values
         '''
         self._multiple_joints_pub.publish(JointCommands(joint_values))
-        rospy.sleep(1.0)
+        rospy.sleep(MOVE_WAIT_TIME)
 
 
     def move_to_neutral(self):
-        '''    widowx_controller.move_gripper(action[-1])
-
+        '''
         Move arm to neutral position
         '''
         self.move_to_target_joints(NEUTRAL_JOINTS)
@@ -40,29 +39,24 @@ class WidowXController:
 
     def move_gripper(self, cmd):
         self._single_joint_pub.publish(SingleCommand('gripper', cmd))
-        rospy.sleep(1.0)
+        rospy.sleep(GRIPPER_WAIT_TIME)
 
 
     def open_gripper(self):
         self._single_joint_pub.publish(SingleCommand('gripper', GRIPPER_OPEN))
-        rospy.sleep(1.0)
+        rospy.sleep(GRIPPER_WAIT_TIME)
 
 
     def close_gripper(self):
         self._single_joint_pub.publish(SingleCommand('gripper', GRIPPER_CLOSED))
-        rospy.sleep(1.0)
+        rospy.sleep(GRIPPER_WAIT_TIME)
 
 
 if __name__ == '__main__':
     controller = WidowXController()
-    controller.move_gripper(0)
     controller.move_to_neutral()
-    controller.move_to_target_joints([0, 0, 0, 0, 0])
     controller.open_gripper()
     rospy.sleep(1.0)
     controller.close_gripper()
     rospy.sleep(1.0)
-    controller.move_to_neutral()
-    controller.move_to_reset()
-    controller.open_gripper()
     rospy.spin()

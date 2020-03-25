@@ -53,3 +53,28 @@ Makefile:126: recipe for target 'cmTC_1dbb0/fast' failed
 make: *** [cmTC_1dbb0/fast] Error 2
 
 
+Performing C++ SOURCE FILE Test OpenCL_CXX_WORKS failed with the following output:
+Change Dir: /home/jonathan/Desktop/Projects/WidowX200_RL/build/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_305df/fast"
+/usr/bin/make -f CMakeFiles/cmTC_305df.dir/build.make CMakeFiles/cmTC_305df.dir/build
+make[1]: Entering directory '/home/jonathan/Desktop/Projects/WidowX200_RL/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_305df.dir/src.cxx.o
+/usr/bin/c++    -I/include/internal  -DBT_USE_DOUBLE_PRECISION -Wall -Wuninitialized -Winit-self -Wunused-function -Wunused-label -Wunused-variable -Wunused-but-set-variable -Wunused-but-set-parameter -Warray-bounds -Wtype-limits -Wreturn-type -Wsequence-point -Wparentheses -Wmissing-braces -Wchar-subscripts -Wswitch -Wwrite-strings -Wenum-compare -Wempty-body -std=c++11 -fopenmp -DOpenCL_CXX_WORKS   -o CMakeFiles/cmTC_305df.dir/src.cxx.o -c /home/jonathan/Desktop/Projects/WidowX200_RL/build/CMakeFiles/CMakeTmp/src.cxx
+/home/jonathan/Desktop/Projects/WidowX200_RL/build/CMakeFiles/CMakeTmp/src.cxx:2:21: fatal error: CL/cl.hpp: No such file or directory
+compilation terminated.
+CMakeFiles/cmTC_305df.dir/build.make:65: recipe for target 'CMakeFiles/cmTC_305df.dir/src.cxx.o' failed
+make[1]: *** [CMakeFiles/cmTC_305df.dir/src.cxx.o] Error 1
+make[1]: Leaving directory '/home/jonathan/Desktop/Projects/WidowX200_RL/build/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_305df/fast' failed
+make: *** [cmTC_305df/fast] Error 2
+
+Source file was:
+
+#include <CL/cl.hpp>
+int main() {
+  cl::Context context;
+  cl::Platform platform;
+  cl::Device device;
+  return 0;
+}
