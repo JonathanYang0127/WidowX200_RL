@@ -57,6 +57,7 @@ def scripted_grasp(env, ik):
 
         action = np.clip(np.array(action, dtype=np.float32), \
             env.action_space.low, env.action_space.high)
+        print(obs['image'].shape)
         next_obs, reward, done, info = env.step(action)
         obs = next_obs
 

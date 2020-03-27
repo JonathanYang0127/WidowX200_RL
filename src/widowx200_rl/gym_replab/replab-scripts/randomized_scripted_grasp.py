@@ -51,8 +51,8 @@ def drop_at_random_location(env):
     print(ik.get_cartesian_pose())
 
     for i in range(args.num_timesteps):
-        print(i)
-        print(obs)
+        #print(i)
+        #print(obs)
         if np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])[:2]) > 0.03:
             print( np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])[:2]) )
             diff = obs['desired_goal'] - obs['achieved_goal']
@@ -109,7 +109,7 @@ def scripted_grasp(env, trajectories):
     gripper_closed = False
     for i in range(args.num_timesteps):
         print(i)
-        print(obs)
+        #print(obs)
         if np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])[:2]) > 0.03 \
             and not gripper_closed:
             #print( np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])[:2]) )
@@ -182,6 +182,9 @@ if __name__ == '__main__':
     for i in range(100):
         data = []
         goal = scripted_grasp(env, data)
-        object_grasped = drop_at_random_location(env)
+        image0 = gym_replab.utils.get_rgb_image(rgb_image_service)
+        drop_at_random_location(env)
+        image1 = gym_replab.utils.get_rgb_image(rgb_image_service)
+        object_grasped = gym_replab.utils.grasp_success(image0, image1)
         if goal is not None:
             store_trajectory(object_grasped, data, {'state': goal})

@@ -11,7 +11,7 @@ from rospy_tutorials.msg import Floats
 from std_msgs.msg import String
 
 import random
-
+from .. import utils
 
 class WidowX200EnvJoint(gym.Env):
     def __init__(self):
@@ -78,7 +78,8 @@ class WidowX200EnvJoint(gym.Env):
             obs['achieved_goal'] = self.current_pos[:3]
             obs['gripper'] = self.current_pos[8]
 
-        obs['image'] = None #np.append(self._get_rgb(), self.original_image, axis=2)
+        obs['image'] = utils.pull_image()#utils.process_image_rgb(utils.pull_image(), 64, 64)
+        #np.append(self._get_rgb(), self.original_image, axis=2)
         obs['state'] =  self.current_pos[3:9]
         return obs
 
