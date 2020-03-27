@@ -1,3 +1,6 @@
 *.pyc
 *.egg-info/*
 src/interbotix_ros_arms
+*.png
+*.pcd
+

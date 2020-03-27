@@ -17,7 +17,7 @@ class WidowX200EnvJoint(gym.Env):
     def __init__(self):
         #Normalized action space
         self.action_space = spaces.Box(low=np.array([-0.5, -0.25, -0.25, -0.25, -0.5, -1.0 / 3]),
-                                       high=np.array([0.5, 0.25, 0.25, 0.25, 0.5, 2.8 / 3]), dtype=np.float32)
+                                       high=np.array([0.5, 0.25, 0.25, 0.25, 0.5, 1.8 / 3]), dtype=np.float32)
 
         self.obs_mode = 'verbose'   #CHANGE
         self.goal = None          #CHANGE
@@ -27,11 +27,21 @@ class WidowX200EnvJoint(gym.Env):
         self.goal = goal
 
 
-    def reset(self):
-        self.reset_publisher.publish("OPEN_GRIPPER")
+    def reset(self, gripper = True):
+        if gripper:
+            self.reset_publisher.publish("OPEN_GRIPPER")
+        else:
+            self.reset_publisher.publish("NO_GRIPPER")
         rospy.sleep(3.0)
-        self.step([0, 0, 0, 0, 0, 0.6])
+        self.get_observation_publisher.publish("GET_OBSERVATION")
+        self.current_pos = np.array(rospy.wait_for_message(
+            "/widowx_env/action/observation", numpy_msg(Floats)).data)
         return self._get_obs()
+
+
+    def move_to_neutral(self):
+        self.neutral_publisher.publish("MOVE_TO_NEUTRAL")
+        rospy.sleep(1.0)
 
 
     def step(self, action):
@@ -76,12 +86,24 @@ class WidowX200EnvJoint(gym.Env):
     def _get_reward(self):
         return 0
 
+
+    def check_if_object_grasped_gripper(self):
+        self.step([0, 0, 0, 0, 0, -0.3])
+        if self.current_pos[8] > -0.9:
+            return True
+        return False
+
+
     def _start_rospy(self):
         rospy.init_node("WidowX200_Env")
         self.reset_publisher = rospy.Publisher(
             "/widowx_env/reset", String, queue_size=1)
         self.action_publisher = rospy.Publisher(
             "/widowx_env/action", numpy_msg(Floats), queue_size=1)
+        self.neutral_publisher = rospy.Publisher(
+            "/widowx_env/neutral", String, queue_size=1)
+        self.get_observation_publisher = rospy.Publisher(
+            "/widowx_env/get_observation", String, queue_size=1)
         rospy.sleep(2.0)
 
         return self

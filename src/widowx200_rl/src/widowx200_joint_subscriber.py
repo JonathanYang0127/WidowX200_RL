@@ -18,14 +18,18 @@ def start_controller():
 def initialize_publishers_and_subscribers():
     global observation_publisher
     '''
-    Publishers
+    Subscribers
     '''
     reset_subscriber = rospy.Subscriber("/widowx_env/reset", String, reset)
     action_subscriber = rospy.Subscriber(
         "/widowx_env/action", numpy_msg(Floats), take_action)
+    neutral_subscriber = rospy.Subscriber(
+        "/widowx_env/neutral", String, neutral_cb)
+    observation_subscriber = rospy.Subscriber(
+        "/widowx_env/get_observation", String, observation_cb)
 
     '''
-    Subscribers
+    Publishers
     '''
     observation_publisher = rospy.Publisher(
         "/widowx_env/action/observation", numpy_msg(Floats), queue_size=1)
@@ -57,6 +61,12 @@ def take_action(data):
     observation_publisher.publish(current_state)
 
 
+def observation_cb(data):
+    current_state = np.array(get_state(), dtype=np.float32)
+    rospy.sleep(1)
+    observation_publisher.publish(current_state)
+
+
 def reset(data):
     widowx_controller.move_to_neutral()
     rospy.sleep(1.5)
@@ -65,6 +75,10 @@ def reset(data):
     if data.data != "NO_GRIPPER":
         widowx_controller.open_gripper()
 
+
+def neutral_cb(data):
+    widowx_controller.move_to_neutral()
+    rospy.sleep(1.5)
 
 if __name__ == '__main__':
     start_controller()

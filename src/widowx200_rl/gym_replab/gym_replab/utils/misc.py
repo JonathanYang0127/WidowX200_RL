@@ -1,4 +1,4 @@
-from .misc import *
+from .color_pc_clusters import *
 import os
 import datetime
 import numpy as np
@@ -11,11 +11,12 @@ import time
 from math import asin, sin, cos, sqrt, acos
 
 
-def compute_ik_command(action, ik):
+def compute_ik_command(action, quat=None, ik = None):
     pose = ik.get_cartesian_pose()
     pos = pose[:3]
-    quat = pose[3:]
     pos += action
+    if quat is None:
+        quat = pose[3:]
     return ik._calculate_ik(pos, quat)[0][:5] - ik.get_joint_angles()[:5]
 
 def timestamp(divider='-', datetime_divider='T'):
@@ -39,41 +40,12 @@ def get_pc_object_center(kinect_image_service):
     return get_pc_cluster_center()
 
 def check_if_object_grasped(kinect_image_service):
-    pull_image()
+    kinect_image_service.pull_image()
     return compute_center_and_pc() is None
 
 def true_angle_diff(theta):
     """theta is before the absolute value is applied"""
     return min(abs(theta), abs(theta - 2 * np.pi))
-
-def compute_wrist_rotation(object_center, object_vector):
-    center =  np.array([8.1728762e-03, 1.3792046e-04])
-
-    object_angle = np.angle(complex(object_vector[1], object_vector[0]))
-    if object_angle < 0:
-        object_angle += math.pi
-
-    standard_angle = math.atan((object_center[0] - center[0]) / (object_center[1] - center[1]))
-
-    if object_center[1] > center[1] and object_center[0] > center[0]:
-        ee_angle = math.atan((object_center[0] - center[0]) / (object_center[1] - center[1])) - math.pi / 2
-    elif object_center[1] <= center[1] and object_center[0] > center[0]:
-        ee_angle = math.atan((object_center[0] - center[0]) / (object_center[1] - center[1])) - math.pi / 2
-    elif object_center[1] <= center[1] and object_center[0] <= center[0]:
-        ee_angle = 3 * math.pi / 2 + math.atan((object_center[0] - center[0]) / (object_center[1] - center[1]))
-    elif object_center[1] > center[1] and object_center[0] <= center[0]:
-        ee_angle = math.atan((object_center[0] - center[0]) / (object_center[1] - center[1])) + math.pi / 2
-
-
-    turn = ee_angle - object_angle
-    while turn > math.pi:
-        turn -= math.pi
-    while turn < 0:
-        turn += math.pi
-    if turn > math.pi / 2:
-        turn = -(math.pi - turn)
-
-    return turn
 
 
 class SafetyBox:

@@ -59,4 +59,5 @@ if __name__ == '__main__':
     rospy.sleep(1.0)
     controller.close_gripper()
     rospy.sleep(1.0)
+    #controller.move_to_reset()
     rospy.spin()

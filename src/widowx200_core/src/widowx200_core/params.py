@@ -5,8 +5,9 @@ JOINT_NAMES = ['waist', 'shoulder', 'elbow', 'wrist_angle', 'wrist_rotate', 'gri
 MOVE_TO_NEUTRAL = [0.0, -317.42, -5000.33999, 0.0, 43.0400009]
 GRIPPER_OPEN = 1.8
 GRIPPER_CLOSED = -1.0
-NEUTRAL_JOINTS = [1.57, -1.85, -1.5, -0.8, 0]
-RESET_JOINTS = [1.57, -1.3, -1.3, 1.57, 0]
+NEUTRAL_JOINTS = [1.57, -1.80, -0.62, -2.0, 0.00]
+#NEUTRAL_JOINTS = [1.57, -1.79, -1.67, -0.83, 0]
+RESET_JOINTS = [1.57, -0.6, -0.6, -1.57, 1.57]
 JOINT_MIN = np.array([
     -3.1,
     -1.571,
