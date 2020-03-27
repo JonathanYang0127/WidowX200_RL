@@ -9,7 +9,7 @@ import itertools
 
 RAW_IMAGE_HEIGHT = 480
 RAW_IMAGE_WIDTH = 640
-L_MARGIN = 50
+L_MARGIN = 90
 R_MARGIN = (RAW_IMAGE_WIDTH - RAW_IMAGE_HEIGHT) - L_MARGIN
 
 class USBImagePuller:
@@ -40,7 +40,7 @@ def process_image_rgb(image, desired_h=64, desired_w=64):
     assert desired_w == int(2 ** np.round(np.log2(desired_w))), "desired_w {} not a power of 2".format(desired_w)
 
     # flip upside-down (0), then leftside-right (1)
-    image = np.flip(image, axis=(0,1))
+    # image = np.flip(image, axis=(0,1))
     h, w, _ = image.shape
     assert h == RAW_IMAGE_HEIGHT and w == RAW_IMAGE_WIDTH, \
         "Dimensions {}, {} do not match expected raw image dimensions {}, {}".format(
@@ -48,7 +48,7 @@ def process_image_rgb(image, desired_h=64, desired_w=64):
         )
 
     # Crop left and right.
-    image = image[:,L_MARGIN : RAW_IMAGE_WIDTH - R_MARGIN]
+    # image = image[:,L_MARGIN : RAW_IMAGE_WIDTH - R_MARGIN]
 
     # Resize square image to a power of 2.
     resize_to = next(
