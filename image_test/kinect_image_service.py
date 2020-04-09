@@ -259,6 +259,6 @@ def pull_image(image_type_str, color_filter = False):
 
 if __name__ == '__main__':
     try:
-        pull_image("rgb", False) # "rgb" or "sd_pts"
+        pull_image("sd_pts", False) # "rgb" or "sd_pts"
     except rospy.ROSInterruptException:
         pass

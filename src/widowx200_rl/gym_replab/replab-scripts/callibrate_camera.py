@@ -15,7 +15,8 @@ def scripted_grasp(env, ik, goal):
     obs = env.reset()
     quat = ik.get_cartesian_pose()[3:]
 
-    print(ik.get_cartesian_pose())
+    low_clip = env.action_space.low[:5]
+    high_clip = env.action_space.high[:5]
 
     gripper_closed = False
     for i in range(80):
@@ -29,7 +30,8 @@ def scripted_grasp(env, ik, goal):
             if np.linalg.norm(diff) < 0.06:
                 diff[0] = diff[0] / np.linalg.norm(diff)
                 diff[1] = diff[1] / np.linalg.norm(diff)
-            action = gym_replab.utils.compute_ik_command(diff, quat, ik) / 4
+            diff *= 5
+            action = gym_replab.utils.compute_ik_command(diff, low_clip, high_clip, quat, ik)
             action = np.append(action, 0.6)
             print('Moving to object')
         elif abs(obs['desired_goal'][2] - obs['achieved_goal'][2]) > 0.01 \
@@ -37,7 +39,8 @@ def scripted_grasp(env, ik, goal):
             print(obs['desired_goal'][2], obs['achieved_goal'][2], abs(obs['desired_goal'][2] - obs['achieved_goal'][2]))
             diff = obs['desired_goal'] - obs['achieved_goal']
             diff[2] -= 0.005
-            action = gym_replab.utils.compute_ik_command(diff, quat, ik) / 3
+            diff *= 5
+            action = gym_replab.utils.compute_ik_command(diff, low_clip, high_clip, quat, ik)
             action = np.append(action, 0.6)
             print('Lowering arm')
         else:
@@ -50,13 +53,13 @@ def scripted_grasp(env, ik, goal):
 
 
 if __name__ == '__main__':
-    goals = [[0.13, 0.08, 0.065],
+    goals = [[0.16, 0.08, 0.065],
     [0.24, 0.08, 0.065],
     [0.30, 0.10, 0.065],
-    [0.15, -0.03, 0.065],
+    [0.16, -0.03, 0.065],
     [0.24, -0.03, 0.065],
     [0.30, -0.03, 0.065],
-    [0.13, -0.18, 0.065],
+    [0.16, -0.18, 0.065],
     [0.24, -0.20, 0.065],
     [0.30, -0.20, 0.065]]
     robot_coords = []
@@ -75,6 +78,9 @@ if __name__ == '__main__':
         pc_center = gym_replab.utils.get_pc_cluster_center("pc{}.pcd".format(j))
         robot_coords.append(obs['achieved_goal'])
         camera_coords.append(pc_center)
+        if pc_center is None:
+            print("ASDASD")
+            break
         next = input('Press n for next point')
         while (next != 'n'):
             next = input('Press n for next point')

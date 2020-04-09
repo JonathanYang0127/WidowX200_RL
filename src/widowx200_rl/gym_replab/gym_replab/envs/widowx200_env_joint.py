@@ -19,8 +19,12 @@ class WidowX200EnvJoint(gym.Env):
         self.action_space = spaces.Box(low=np.array([-0.5, -0.25, -0.25, -0.25, -0.5, -1.0 / 3]),
                                        high=np.array([0.5, 0.25, 0.25, 0.25, 0.5, 1.8 / 3]), dtype=np.float32)
 
+        self.observation_space = spaces.Box(low=np.array([-3.0, -3.0, -3.0, -3.0, -3.9, -3.0]),
+                                      high=np.array([3.0, 3.0, 3.0, 3.0, 3.0, 3.0]), dtype=np.float32)
+
         self.obs_mode = 'verbose'   #CHANGE
         self.goal = None          #CHANGE
+        self._image_puller = utils.USBImagePuller()
 
 
     def set_goal(self, goal):
@@ -78,7 +82,7 @@ class WidowX200EnvJoint(gym.Env):
             obs['achieved_goal'] = self.current_pos[:3]
             obs['gripper'] = self.current_pos[8]
 
-        obs['image'] = utils.pull_image()#utils.process_image_rgb(utils.pull_image(), 64, 64)
+        obs['image'] = utils.process_image_rgb(self._image_puller.pull_image(), 64, 64)
         #np.append(self._get_rgb(), self.original_image, axis=2)
         obs['state'] =  self.current_pos[3:9]
         return obs

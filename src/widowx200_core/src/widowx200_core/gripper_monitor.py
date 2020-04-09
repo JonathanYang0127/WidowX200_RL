@@ -36,8 +36,8 @@ class WidowXGripper:
                 self._joint_states.velocity[i] == 0.0 and
                 abs(self._joint_states.position[i] - self._desired_position) > 0.015):
                 # Sometimes, when we just give the gripper a commmand, the velocity might be 0
-                self._gripper_pub.publish(SingleCommand('gripper', self._joint_states.position[i] + 0.02))
-            time.sleep(0.2)
+                self._gripper_pub.publish(SingleCommand('gripper', self._joint_states.position[i] + 0.01))
+            time.sleep(0.1)
             prev_desired_position = self._joint_states.effort[i]
 
 

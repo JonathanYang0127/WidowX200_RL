@@ -5,34 +5,32 @@ sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
 import cv2
 sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 import time
-
+import itertools
 
 RAW_IMAGE_HEIGHT = 480
 RAW_IMAGE_WIDTH = 640
-L_MARGIN = 50
+L_MARGIN = 90
 R_MARGIN = (RAW_IMAGE_WIDTH - RAW_IMAGE_HEIGHT) - L_MARGIN
 
+class USBImagePuller:
+    def __init__(self, camport=0):
+        self.camport = camport
+        self.cap = cv2.VideoCapture(self.camport)
+        assert self.cap.isOpened(), "/dev/video{} is not opened.".format(self.camport)
 
-def stream_image(camport=0):
-    cap = cv2.VideoCapture(camport)
-    assert cap.isOpened(), "/dev/video{} is not opened.".format(camport)
+    def stream_image(self):
+        while True:
+            ret, frame = self.cap.read()
+            cv2.imshow('video', frame)
+            # time.sleep(0.01)
+            break
 
-    while True:
-        ret, frame = cap.read()
-        cv2.imshow('video', frame)
-#        time.sleep(0.01)
-        break
-
-
-def pull_image(camport=0, image_name=None):
-    cap = cv2.VideoCapture(camport)
-    assert cap.isOpened(), "/dev/video{} is not opened.".format(camport)
-    ret, frame = cap.read()
-    if image_name:
-        assert image_name[-4:] in [".jpg", ".png"], "Invalid image_name {}".format(image_name)
-        cv2.imwrite(image_name, frame)
-    return frame
-
+    def pull_image(self, image_name=None):
+        ret, frame = self.cap.read()
+        if image_name:
+            assert image_name[-4:] in [".jpg", ".png"], "Invalid image_name {}".format(image_name)
+            cv2.imwrite(image_name, frame)
+        return frame
 
 def process_image_rgb(image, desired_h=64, desired_w=64):
     # Currently only supporting downsampling to square, 2**i x 2**i image.
@@ -42,7 +40,7 @@ def process_image_rgb(image, desired_h=64, desired_w=64):
     assert desired_w == int(2 ** np.round(np.log2(desired_w))), "desired_w {} not a power of 2".format(desired_w)
 
     # flip upside-down (0), then leftside-right (1)
-    image = np.flip(image, axis=(0,1))
+    # image = np.flip(image, axis=(0,1))
     h, w, _ = image.shape
     assert h == RAW_IMAGE_HEIGHT and w == RAW_IMAGE_WIDTH, \
         "Dimensions {}, {} do not match expected raw image dimensions {}, {}".format(
@@ -50,7 +48,7 @@ def process_image_rgb(image, desired_h=64, desired_w=64):
         )
 
     # Crop left and right.
-    image = image[:,L_MARGIN : RAW_IMAGE_WIDTH - R_MARGIN]
+    # image = image[:,L_MARGIN : RAW_IMAGE_WIDTH - R_MARGIN]
 
     # Resize square image to a power of 2.
     resize_to = next(
@@ -68,16 +66,17 @@ def process_image_rgb(image, desired_h=64, desired_w=64):
 
     return image
 
-
 if __name__ == "__main__":
+    image_puller = USBImagePuller()
     count = 0
     while True:
-        frame = pull_image(0, 'randompicture_{}.png'.format(count))
+        frame = image_puller.pull_image('randompicture_{}.png'.format(count))
         frame = process_image_rgb(frame, 64, 64)
         cv2.imwrite("randompicture_{}_processed.png".format(count), frame)
         print("frame.shape", frame.shape)
-        time.sleep(1)
+        # time.sleep(1)
         count += 1
-        break
+        if count == 1:
+            break
     #stream_image()
     #time.sleep(10)

@@ -73,7 +73,8 @@ def reset(data):
     widowx_controller.move_to_reset()
     rospy.sleep(1.0)
     if data.data != "NO_GRIPPER":
-        widowx_controller.open_gripper()
+        while widowx_controller._ik.get_joint_angles()[5] < 1.6:
+             widowx_controller.open_gripper()
 
 
 def neutral_cb(data):

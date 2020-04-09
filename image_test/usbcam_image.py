@@ -70,7 +70,7 @@ if __name__ == "__main__":
     image_puller = USBImagePuller()
     count = 0
     while True:
-        frame = image_puller.pull_image('randompicture_{}.png'.format(count))
+        frame = image_puller.pull_image('picture_{}.png'.format(count))
         frame = process_image_rgb(frame, 64, 64)
         cv2.imwrite("randompicture_{}_processed.png".format(count), frame)
         print("frame.shape", frame.shape)

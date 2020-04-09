@@ -11,13 +11,42 @@ import time
 from math import asin, sin, cos, sqrt, acos
 
 
-def compute_ik_command(action, quat=None, ik = None):
+def add_noise(diff):
+    new_diff = np.copy(diff)
+    new_diff += np.random.normal(0, 0.06, (3,))
+    return new_diff
+
+
+def enforce_normalization(diff):
+    for i in range(3):
+        sgn = np.sign(diff[i])
+        if abs(diff[i]) > 1:
+            diff[i] = sgn
+        if abs(diff[i]) < 0.005:
+            diff[i] = 0.005*sgn
+
+    return diff
+
+
+def compute_ik_command(action, low_clip, high_clip, quat=None, ik = None):
+    action = np.array(action, dtype=np.float32)
+    action /= 5
     pose = ik.get_cartesian_pose()
     pos = pose[:3]
     pos += action
     if quat is None:
         quat = pose[3:]
-    return ik._calculate_ik(pos, quat)[0][:5] - ik.get_joint_angles()[:5]
+    ik_command = ik._calculate_ik(pos, quat)[0][:5] - ik.get_joint_angles()[:5]
+
+    ik_command /= 3.5
+    ik_command = np.clip(np.array(ik_command, dtype=np.float32), \
+        low_clip, high_clip)
+
+    for i in range(len(ik_command)):
+        if abs(ik_command[i]) < 0.001:
+            ik_command[i] = 0
+
+    return ik_command
 
 def timestamp(divider='-', datetime_divider='T'):
     now = datetime.datetime.now()

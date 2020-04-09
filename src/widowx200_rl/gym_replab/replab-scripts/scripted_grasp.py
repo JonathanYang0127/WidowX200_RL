@@ -11,6 +11,9 @@ def scripted_grasp(env, ik):
     obs = env.reset()
     quat = ik.get_cartesian_pose()[3:]
 
+    low_clip = env.action_space.low[:5]
+    high_clip = env.action_space.high[:5]
+
     print(ik.get_cartesian_pose())
 
     gripper_closed = False
@@ -25,7 +28,7 @@ def scripted_grasp(env, ik):
             if np.linalg.norm(diff) < 0.06:
                 diff[0] = diff[0] / np.linalg.norm(diff)
                 diff[1] = diff[1] / np.linalg.norm(diff)
-            action = gym_replab.utils.compute_ik_command(diff, quat, ik) / 4
+            action = gym_replab.utils.compute_ik_command(diff, low_clip, high_clip, quat, ik) / 4
             action = np.append(action, 0.6)
             print('Moving to object')
         elif abs(obs['desired_goal'][2] - obs['achieved_goal'][2]) > 0.01 \
@@ -33,25 +36,25 @@ def scripted_grasp(env, ik):
             print(obs['desired_goal'][2], obs['achieved_goal'][2], abs(obs['desired_goal'][2] - obs['achieved_goal'][2]))
             diff = obs['desired_goal'] - obs['achieved_goal']
             diff[2] -= 0.005
-            action = gym_replab.utils.compute_ik_command(diff, quat, ik) / 3
+            action = gym_replab.utils.compute_ik_command(diff, low_clip, high_clip, quat, ik) / 3
             action = np.append(action, 0.6)
             print('Lowering arm')
         elif obs['joints'][5] > 0:
             print(obs['desired_goal'][2], obs['achieved_goal'], abs(obs['desired_goal'][2] - obs['achieved_goal'][2]))
             diff = np.array([0, 0, 0])
-            action = gym_replab.utils.compute_ik_command(diff, quat, ik) / 3
+            action = gym_replab.utils.compute_ik_command(diff, low_clip, high_clip, quat, ik) / 3
             action = np.append(action, -0.3)
             gripper_closed = True
             print('Grasping object')
         elif obs['achieved_goal'][2] < 0.10:
             print(obs['desired_goal'][2], obs['achieved_goal'][2], abs(obs['desired_goal'][2] - obs['achieved_goal'][2]))
             diff = [0, 0, 0.1]
-            action = gym_replab.utils.compute_ik_command(diff, quat, ik) / 3
+            action = gym_replab.utils.compute_ik_command(diff, low_clip, high_clip, quat, ik) / 3
             action = np.append(action, -0.3)
             print('Lifting object')
         else:
             diff = np.array([0, 0, 0.05])
-            action = gym_replab.utils.compute_ik_command(diff, quat, ik) / 3
+            action = gym_replab.utils.compute_ik_command(diff, low_clip, high_clip, quat, ik) / 3
             action = np.append(action, -0.3)
             print('Done!')
 
