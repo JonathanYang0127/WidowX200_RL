@@ -12,12 +12,11 @@ from sklearn.cluster import dbscan
 # TRAY_UPPERBOUND = np.array([0.2334, 0.1443, 0.7494]) - np.array([margin, margin, 0])
 
 # New Widow200 Settings
-TRAY_CENTER = np.array([0.025, 0.05, 0.7])
+TRAY_CENTER = np.array([0.045, 0.17, 0.77])
 margin = 0.02
-TRAY_LOWERBOUND = np.array([-0.17, -0.1,  0.6]) + np.array([margin, margin, 0])
+TRAY_LOWERBOUND = np.array([-0.17, -0.1,  0.59]) + np.array([margin, margin, 0])
 # --Teddy in the corner: [-0.13604932, -0.07284055,  0.8274319]
-TRAY_UPPERBOUND = np.array([0.24, 0.255, 0.86]) - np.array([margin, margin, 0])
-# --Teddy in the corner: [0.2083086, 0.16757944, 0.63460684]
+TRAY_UPPERBOUND = np.array([0.24, 0.27, 0.86]) - np.array([margin, margin, 0])
 PC_TO_ROBOT_TRANSMATRIX =  [[-0.02826889, -0.99110293, -0.01762187],
  [-0.9288281,  1.4305346,   0.00547342],
  [ 0.45545167,  1.4718122,  -0.100721  ],

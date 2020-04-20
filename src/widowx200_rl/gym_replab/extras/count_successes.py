@@ -1,12 +1,13 @@
 import os
 import pickle as pkl
 
-data_dir = '/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspNew'
+data_dir = '/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspNew4'
 
 
 def is_successful(data_file):
     with open(data_file, 'rb') as fp:
         data = pkl.load(fp)
+    print(fp)
     return int(data['rewards'][len(data['rewards']) - 1]) == 1
 
 

@@ -3,7 +3,7 @@ import pickle as pkl
 import gym_replab
 import numpy as np
 
-data_dir = '/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspNew'
+data_dir = '/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspNew4'
 save_dir = '/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspNewJointCombined'
 training_pool = gym_replab.utils.DemoPool()
 validation_pool = gym_replab.utils.DemoPool()
