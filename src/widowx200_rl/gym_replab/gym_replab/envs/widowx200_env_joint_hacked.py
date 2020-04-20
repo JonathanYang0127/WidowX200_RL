@@ -55,9 +55,9 @@ class WidowX200EnvJointHacked(gym.Env):
         action = np.array(action, dtype='float32')
         action = np.clip(np.array(action, dtype=np.float32), self.action_space.low, self.action_space.high)
         if self.current_pos is not None and self.current_pos[2] < 0.068:
-            action = np.append(action, [[0.6]])
-        else:
             action = np.append(action, [[-0.3]])
+        else:
+            action = np.append(action, [[0.6 if self.current_pos[8] is None else self.current_pos[8]]])
         self.action_publisher.publish(action)
         self.current_pos = np.array(rospy.wait_for_message(
             "/widowx_env/action/observation", numpy_msg(Floats)).data)

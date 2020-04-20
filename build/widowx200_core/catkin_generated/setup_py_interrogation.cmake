@@ -1,6 +1,0 @@
-set(widowx200_core_SETUP_PY_VERSION "0.0.0")
-set(widowx200_core_SETUP_PY_SCRIPTS "")
-set(widowx200_core_SETUP_PY_PACKAGES "widowx200_core")
-set(widowx200_core_SETUP_PY_PACKAGE_DIRS "src/widowx200_core")
-set(widowx200_core_SETUP_PY_MODULES "")
-set(widowx200_core_SETUP_PY_MODULE_DIRS "")
