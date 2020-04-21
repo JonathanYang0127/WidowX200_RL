@@ -8,7 +8,7 @@ import os
 from PIL import Image
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--data_save_directory", type=str, default="WidowX200GraspNew4")
+parser.add_argument("--data_save_directory", type=str, default="WidowX200GraspNewHacked")
 parser.add_argument("--num_trajectories", type=int, default=1000)
 parser.add_argument("--num_timesteps", type=int, default=40)
 parser.add_argument("--video_save_frequency", type=int,
@@ -19,7 +19,8 @@ data_save_path = None
 video_save_path = None
 
 ik = InverseKinematics()
-env = gym.make('widowx200-v0')._start_rospy()
+env = gym.make('widowx200hacked-v0')._start_rospy()
+env_drop = gym.make('widowx200-v0', use_rgb=False)._start_rospy()
 
 depth_image_service = gym_replab.utils.KinectImageService('sd_pts')
 rgb_image_service = gym_replab.utils.KinectImageService('rgb')
@@ -39,8 +40,8 @@ def make_dirs():
         os.makedirs(video_save_path)
 
 
-def drop_at_random_location(env):
-    env.move_to_neutral()
+def drop_at_random_location(env_drop):
+    env_drop.move_to_neutral()
     time.sleep(1.0)
     grasped = gym_replab.utils.check_if_object_grasped(depth_image_service)
     #grasped = env.check_if_object_grasped_gripper()
@@ -50,8 +51,8 @@ def drop_at_random_location(env):
     goal[0] = np.random.uniform(low=0.18, high=0.30)
     goal[1] = np.random.uniform(low=-0.17, high=0.13)
     goal[2] = 0.07
-    env.set_goal(goal)
-    obs = env.reset(gripper=False)
+    env_drop.set_goal(goal)
+    obs = env_drop.reset(gripper=False)
     quat = ik.get_cartesian_pose()[3:]
 
     low_clip = env.action_space.low[:5]
@@ -103,8 +104,8 @@ def drop_at_random_location(env):
 
         print(diff)
         action = np.clip(np.array(action, dtype=np.float32), \
-            env.action_space.low, env.action_space.high)
-        obs, reward, next_obs, done = env.step(action)
+            env_drop.action_space.low, env_drop.action_space.high)
+        obs, reward, next_obs, done = env_drop.step(action)
     return True
 
 
@@ -120,7 +121,7 @@ def scripted_grasp(env, data_xyz, data_joint):
     print(goal)
     goal[0] += np.random.uniform(low = -0.02, high = 0.03)
     goal[1] += np.random.uniform(low = -0.015, high = 0.015)
-    goal[2] += np.random.uniform(low = 0, high = 0.01)
+    goal[2] -= 0.01
 
     env.set_goal(goal)
     obs = env.reset()
@@ -151,7 +152,6 @@ def scripted_grasp(env, data_xyz, data_joint):
             diff *= 5
             diff = gym_replab.utils.enforce_normalization(diff)
             action = gym_replab.utils.compute_ik_command(diff, low_clip, high_clip, quat, ik)
-            action = np.append(action, 0.6)
             gripper = 0.6
             print('Moving to object')
         elif (abs(obs['desired_goal'][2] - obs['achieved_goal'][2]) > 0.01 \
@@ -164,43 +164,19 @@ def scripted_grasp(env, data_xyz, data_joint):
             diff *= 5
             diff = gym_replab.utils.enforce_normalization(diff)
             action = gym_replab.utils.compute_ik_command(diff, low_clip, high_clip, quat, ik)
-            action = np.append(action, 0.6)
             gripper = 0.6
             print('Lowering arm')
-        elif obs['joints'][5] > 0.1:
-            #print(obs['desired_goal'][2], obs['achieved_goal'], abs(obs['desired_goal'][2] - obs['achieved_goal'][2]))
-            diff = np.array([0, 0, 0])
-            diff *= 5
-            diff = gym_replab.utils.enforce_normalization(diff)
-            action = gym_replab.utils.compute_ik_command(diff, low_clip, high_clip, quat, ik)
-            action = np.append(action, -0.3)
-            gripper_closed = True
-            gripper = -0.3
-            print('Grasping object')
-        elif obs['achieved_goal'][2] < 0.10:
-            #print(obs['desired_goal'][2], obs['achieved_goal'][2], abs(obs['desired_goal'][2] - obs['achieved_goal'][2]))
-            diff = np.array([0, 0, 0.18])
-            diff *= 5
-            diff = gym_replab.utils.enforce_normalization(diff)
-            action = gym_replab.utils.compute_ik_command(diff, low_clip, high_clip, quat, ik)
-            action = np.append(action, -0.3)
-            gripper = -0.3
-            gripper_closed = True
-            print('Lifting object')
         else:
-            diff = np.array([0, 0, 0.05])
-            diff *= 5
-            diff = gym_replab.utils.enforce_normalization(diff)
-            action = gym_replab.utils.compute_ik_command(diff, low_clip, high_clip, quat, ik)
-            action = np.append(action, -0.3)
-            gripper = -0.3
-            print('Done!')
+            return goal
 
         print(np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])[:2]))
         next_obs, reward, done, info = env.step(action)
-        data_xyz.append([obs, np.append(diff, gripper), next_obs, reward, done])
+        data_xyz.append([obs, np.append(diff, action[4]), next_obs, reward, done])
         data_joint.append([obs, action, next_obs, reward, done])
         obs = next_obs
+
+        if done:
+            return goal
 
     images[0].save('{}/scripted_grasp.gif'.format(video_save_path),
                        format='GIF', append_images=images[1:],
@@ -242,7 +218,7 @@ if __name__ == '__main__':
         make_dirs()
         goal = scripted_grasp(env, data_xyz, data_joint)
         #image0 = gym_replab.utils.get_rgb_image(rgb_image_service)
-        object_grasped = drop_at_random_location(env)
+        object_grasped = drop_at_random_location(env_drop)
         #image1 = gym_replab.utils.get_rgb_image(rgb_image_service)
         #object_grasped = gym_replab.utils.grasp_success(image0, image1)
         if object_grasped:

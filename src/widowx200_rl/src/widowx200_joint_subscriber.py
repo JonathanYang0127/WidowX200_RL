@@ -53,9 +53,9 @@ def take_action(data):
     assert action.shape[0] == 6
     gripper_action = action[-1]
     action = action[:-1]
+    widowx_controller.move_gripper(gripper_action * 3)
     target_joints = widowx_controller._ik.get_joint_angles()[:5] + action
     widowx_controller.move_to_target_joints(target_joints)
-    widowx_controller.move_gripper(gripper_action * 3)
     current_state = np.array(get_state(), dtype=np.float32)
     rospy.sleep(0.05)
     observation_publisher.publish(current_state)

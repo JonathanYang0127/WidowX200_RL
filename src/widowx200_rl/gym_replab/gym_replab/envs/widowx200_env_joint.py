@@ -14,7 +14,7 @@ import random
 from .. import utils
 
 class WidowX200EnvJoint(gym.Env):
-    def __init__(self):
+    def __init__(self, use_rgb=True):
         #Normalized action space
         self.action_space = spaces.Box(low=np.array([-0.5, -0.25, -0.25, -0.25, -0.5, -1.0 / 3]),
                                        high=np.array([0.5, 0.25, 0.25, 0.25, 0.5, 1.8 / 3]), dtype=np.float32)
@@ -24,7 +24,10 @@ class WidowX200EnvJoint(gym.Env):
 
         self.obs_mode = 'verbose'   #CHANGE
         self.goal = None          #CHANGE
-        self._image_puller = utils.USBImagePuller()
+        self.use_rgb = use_rgb
+
+        if self.use_rgb:
+            self._image_puller = utils.USBImagePuller()
 
 
     def set_goal(self, goal):
@@ -82,7 +85,8 @@ class WidowX200EnvJoint(gym.Env):
             obs['achieved_goal'] = self.current_pos[:3]
             obs['gripper'] = self.current_pos[8]
 
-        obs['image'] = utils.process_image_rgb(self._image_puller.pull_image(), 64, 64)
+        if self.use_rgb:
+            obs['image'] = utils.process_image_rgb(self._image_puller.pull_image(), 64, 64)
         #np.append(self._get_rgb(), self.original_image, axis=2)
         obs['state'] =  self.current_pos[3:9]
         return obs
@@ -99,7 +103,7 @@ class WidowX200EnvJoint(gym.Env):
         return False
 
 
-    def _start_rospy(self):
+    def _start_rospy(self, ):
         rospy.init_node("WidowX200_Env")
         self.reset_publisher = rospy.Publisher(
             "/widowx_env/reset", String, queue_size=1)

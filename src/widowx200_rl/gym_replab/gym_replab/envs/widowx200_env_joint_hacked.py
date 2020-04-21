@@ -9,6 +9,8 @@ import rospy
 from rospy.numpy_msg import numpy_msg
 from rospy_tutorials.msg import Floats
 from std_msgs.msg import String
+from widowx200_core.ik import InverseKinematics
+
 
 import random
 from .. import utils
@@ -21,11 +23,10 @@ class WidowX200EnvJointHacked(gym.Env):
 
         self.observation_space = spaces.Box(low=np.array([-3.0, -3.0, -3.0, -3.0, -3.9, -3.0]),
                                       high=np.array([3.0, 3.0, 3.0, 3.0, 3.0, 3.0]), dtype=np.float32)
-
         self.obs_mode = 'verbose'   #CHANGE
         self.goal = None          #CHANGE
         self._image_puller = utils.USBImagePuller()
-
+        ik = InverseKinematics()
 
     def set_goal(self, goal):
         self.goal = goal
@@ -52,22 +53,40 @@ class WidowX200EnvJointHacked(gym.Env):
         '''
         TODO: Get action bounds and enforce them
         '''
-        action = np.array(action, dtype='float32')
+        action = np.array(np.copy(action), dtype='float32')
         action = np.clip(np.array(action, dtype=np.float32), self.action_space.low, self.action_space.high)
-        if self.current_pos is not None and self.current_pos[2] < 0.068:
-            action = np.append(action, [[-0.3]])
+
+        if self.current_pos is not None and self.current_pos[2] < 0.067:
+            action = np.append(action, np.array([[-0.3]], dtype='float32'))
         else:
-            action = np.append(action, [[0.6 if self.current_pos[8] is None else self.current_pos[8]]])
+            action = np.append(action, np.array([[0.6]], dtype='float32'))
+
         self.action_publisher.publish(action)
         self.current_pos = np.array(rospy.wait_for_message(
             "/widowx_env/action/observation", numpy_msg(Floats)).data)
+
         return self._generate_step_tuple()
+
+
+    def lift_object(self):
+        #while self.current_pos[2] < 0.10:
+        print(self.current_pos[8])
+        print('***********************"HI" *******************************') 
+        while self.current_pos[8] > 0.1:
+            self.action_publisher.publish(np.append(np.zeros(5, dtype='float32'), np.array([[-0.3]], dtype='float32')))
+            self.current_pos = np.array(rospy.wait_for_message(
+                "/widowx_env/action/observation", numpy_msg(Floats)).data)
+            print("ASDASDASDA")
+        rospy.sleep(0.5)
+        self.move_to_neutral()
 
 
     def _generate_step_tuple(self):
         reward = self._get_reward()
-        episode_over = False
+        episode_over = self.current_pos is not None and self.current_pos[2] < 0.067
         info = {}
+        if episode_over:
+            self.lift_object()
 
         return self._get_obs(), reward, episode_over, info
 
