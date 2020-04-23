@@ -75,7 +75,7 @@ class InverseKinematics():
         '''
         self._reset_pybullet()
         position, quat = p.getLinkState(self._armID, 5, computeForwardKinematics=1)[4:6]
-        return np.array(list(position) + list(quat))
+        return np.array(list(position) + list(quat), dtype='float32')
 
 
     def _calculate_ik(self, targetPos, targetQuat, threshold=1e-5, maxIter=1000, nJoints=6):

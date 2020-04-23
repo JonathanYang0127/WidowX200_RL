@@ -20,8 +20,9 @@ data_save_path = None
 video_save_path = None
 
 ik = InverseKinematics()
-env = gym.make('widowx200jointhacked-v0')._start_rospy()
+env = gym.make('widowx200xyzhacked-v0')._start_rospy()
 env_drop = gym.make('widowx200-v0', use_rgb=False)._start_rospy()
+
 
 depth_image_service = env.depth_image_service
 rgb_image_service = gym_replab.utils.KinectImageService('rgb')
@@ -111,12 +112,14 @@ def drop_at_random_location(env_drop):
 
 def scripted_grasp(env, data_xyz, data_joint):
     env.move_to_neutral()
-    time.sleep(1.0), reset_object = True
-    pc_data = gym_replab.utils.get_center_and_second_pc(depth_image_service)
-    if pc_data is None:
-        return None
-    else:
-        goal, object_vector = pc_data
+    time.sleep(1.0)
+    pc_data = None
+    while pc_data is None:
+        pc_data = gym_replab.utils.get_center_and_second_pc(depth_image_service)
+        if pc_data is None:
+            env.drop_at_random_location()
+        else:
+            goal, object_vector = pc_data
     goal = np.append(goal, 0.067)
     print(goal)
     goal[0] += np.random.uniform(low = -0.02, high = 0.03)
@@ -151,7 +154,6 @@ def scripted_grasp(env, data_xyz, data_joint):
             diff = gym_replab.utils.add_noise(diff)
             diff *= 5
             diff = gym_replab.utils.enforce_normalization(diff)
-            action = gym_replab.utils.compute_ik_command(diff, low_clip, high_clip, quat, ik)
             gripper = 0.6
             print('Moving to object')
         elif (abs(obs['desired_goal'][2] - obs['achieved_goal'][2]) > 0.01 \
@@ -163,16 +165,15 @@ def scripted_grasp(env, data_xyz, data_joint):
             diff = gym_replab.utils.add_noise(diff)
             diff *= 5
             diff = gym_replab.utils.enforce_normalization(diff)
-            action = gym_replab.utils.compute_ik_command(diff, low_clip, high_clip, quat, ik)
             gripper = 0.6
             print('Lowering arm')
         else:
             return goal
 
         print(np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])[:2]))
-        next_obs, reward, done, info = env.step(action)
-        data_xyz.append([obs, np.append(diff, action[4]), next_obs, reward, done])
-        data_joint.append([obs, action, next_obs, reward, done])
+        next_obs, reward, done, info = env.step(diff)
+        #data_xyz.append([obs, np.append(diff, action[4]), next_obs, reward, done])
+        #data_joint.append([obs, action, next_obs, reward, done])
         obs = next_obs
 
         if done:
@@ -218,12 +219,12 @@ if __name__ == '__main__':
         make_dirs()
         goal = scripted_grasp(env, data_xyz, data_joint)
         #image0 = gym_replab.utils.get_rgb_image(rgb_image_service)
-        object_grasped = drop_at_random_location(env_drop)
+        #object_grasped = env.drop_at_random_location()
         #image1 = gym_replab.utils.get_rgb_image(rgb_image_service)
         #object_grasped = gym_replab.utils.grasp_success(image0, image1)
-        if object_grasped:
-            print("*****SUCCESS*****")
-        else:
-            print("*****FAIL*****")
-        if goal is not None:
-            store_trajectory(object_grasped, data_xyz, data_joint, {'goal': goal})
+        #if object_grasped:
+        #    print("*****SUCCESS*****")
+        #else:
+        #    print("*****FAIL*****")
+        #if goal is not None:
+            #store_trajectory(object_grasped, data_xyz, data_joint, {'goal': goal})

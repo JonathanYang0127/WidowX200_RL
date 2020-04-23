@@ -36,6 +36,10 @@ def compute_ik_command(action, low_clip, high_clip, quat=None, ik = None):
     pos += action
     if quat is None:
         quat = pose[3:]
+
+    return compute_ik_solution(pos, quat, low_clip, high_clip, ik)
+
+def compute_ik_solution(pos, quat, low_clip, high_clip, ik):
     ik_command = ik._calculate_ik(pos, quat)[0][:5] - ik.get_joint_angles()[:5]
 
     ik_command /= 3.5
