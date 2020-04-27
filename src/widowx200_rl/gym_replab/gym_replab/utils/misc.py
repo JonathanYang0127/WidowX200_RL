@@ -43,8 +43,9 @@ def compute_ik_solution(pos, quat, low_clip, high_clip, ik):
     ik_command = ik._calculate_ik(pos, quat)[0][:5] - ik.get_joint_angles()[:5]
 
     ik_command /= 3.5
-    ik_command = np.clip(np.array(ik_command, dtype=np.float32), \
-        low_clip, high_clip)
+    if low_clip is not None:
+        ik_command = np.clip(np.array(ik_command, dtype=np.float32), \
+            low_clip, high_clip)
 
     for i in range(len(ik_command)):
         if abs(ik_command[i]) < 0.001:

@@ -2,7 +2,7 @@ from sensor_msgs.msg import Image as Image_msg, PointCloud2 as PointCloud2_msg
 import sensor_msgs.point_cloud2 as pc2
 import rospy
 import numpy as np
-import skimage.transform
+import skimage
 import matplotlib as mpl
 mpl.use('Agg') # Stop Matplotlib from expecting DISPLAY
 import matplotlib.pyplot as plt

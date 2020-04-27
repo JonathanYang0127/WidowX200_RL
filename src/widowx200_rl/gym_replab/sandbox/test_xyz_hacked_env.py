@@ -130,10 +130,6 @@ def scripted_grasp(env, data_xyz, data_joint):
     obs = env.reset()
     quat = ik.get_cartesian_pose()[3:]
 
-    low_clip = env.action_space.low[:5]
-    high_clip = env.action_space.high[:5]
-
-
     images = []
 
     gripper_closed = False
@@ -168,8 +164,12 @@ def scripted_grasp(env, data_xyz, data_joint):
             gripper = 0.6
             print('Lowering arm')
         else:
+            images[0].save('{}/scripted_grasp.gif'.format(video_save_path),
+                               format='GIF', append_images=images[1:],
+                               save_all=True, duration=100, loop=0)
             return goal
 
+        print(diff)
         print(np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])[:2]))
         next_obs, reward, done, info = env.step(diff)
         #data_xyz.append([obs, np.append(diff, action[4]), next_obs, reward, done])
@@ -177,6 +177,9 @@ def scripted_grasp(env, data_xyz, data_joint):
         obs = next_obs
 
         if done:
+            images[0].save('{}/scripted_grasp.gif'.format(video_save_path),
+                               format='GIF', append_images=images[1:],
+                               save_all=True, duration=100, loop=0)
             return goal
 
     images[0].save('{}/scripted_grasp.gif'.format(video_save_path),

@@ -11,7 +11,7 @@ os.sys.path.append(ros_path)
 
 MASK_DIFF_THRESH = 15
 MIN_PIXEL_DIFF_THRESH = 0.0065 # for far-away objects. Will be scaled up for closer objects.
-CANVAS_DIFF_THRESH = 100 # some value between [0, 255]
+CANVAS_DIFF_THRESH = 200 # some value between [0, 255]
 MAX_BYTE_VAL = 255
 # This threshold is scaled up depending on
 # how close the object is to the camera.
@@ -39,7 +39,7 @@ def background_subtraction(image0, image1, save_image=False):
     if save_image:
         cv2.imwrite("rgbdiff.png", diff)
         cv2.imwrite("diff.png", canvas)
-    return canvas
+    return diff, canvas
 
 def is_object_missing(canvas):
     image_area = canvas.shape[0] * canvas.shape[1]
@@ -51,7 +51,7 @@ def is_object_missing(canvas):
 
     # Do rescaling here. Detect object midpoint.
     x_cm, y_cm = ndimage.measurements.center_of_mass(canvas)
-    # x_cm, y_cm are the center of mass coordinates on the canvas.
+    # x_cm, y_cm are the center of mass coordinates on the canvas.canvas
     # x_cm is the "y"-coordinate on the image.
     # x_cm is higher for lower position on the image (closer to the camera)
     # x_cm ranges from 30 (far) to 190 (close).
@@ -63,8 +63,35 @@ def is_object_missing(canvas):
     # If midpoint is high, lower PIXEL_DIFF_THRESH.
     return change_in_canvas > adjusted_pixel_diff_thresh
 
-def grasp_success(image0, image1):
-    canvas = background_subtraction(image0, image1)
+
+def apply_blob_detection(img, save_image = False):
+    params = cv2.SimpleBlobDetector_Params()
+    params.filterByColor = False
+    params.filterByArea = True
+    params.filterByCircularity = False
+    params.filterByInertia = True
+    params.filterByConvexity = False
+    ver = (cv2.__version__).split('.')
+    if int(ver[0]) < 3 :
+        detector = cv2.SimpleBlobDetector(params)
+    else :
+        detector = cv2.SimpleBlobDetector_create(params)
+
+    detector.empty()
+    keypoints = detector.detect(img)
+    if save_image:
+        img_with_keypoints = cv2.drawKeypoints(img, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+        cv2.imwrite("keypoints.png", img_with_keypoints)
+    return len(keypoints) == 1
+
+
+def grasp_success_blob_detector(image0, image1, save_image=False):
+    diff, canvas = background_subtraction(image0, image1, save_image)
+    return apply_blob_detection(diff, save_image)
+
+
+def grasp_success(image0, image1, save_image=False):
+    diff, canvas = background_subtraction(image0, image1, save_image)
     return is_object_missing(canvas)
 
 if __name__ == "__main__":
