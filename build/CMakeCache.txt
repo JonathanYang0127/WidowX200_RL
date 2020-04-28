@@ -634,6 +634,12 @@ bond_DIR:PATH=/opt/ros/kinetic/share/bond/cmake
 //The directory containing a CMake configuration file for bondcpp.
 bondcpp_DIR:PATH=/opt/ros/kinetic/share/bondcpp/cmake
 
+//The directory containing a CMake configuration file for camera_calibration_parsers.
+camera_calibration_parsers_DIR:PATH=/opt/ros/kinetic/share/camera_calibration_parsers/cmake
+
+//The directory containing a CMake configuration file for camera_info_manager.
+camera_info_manager_DIR:PATH=/opt/ros/kinetic/share/camera_info_manager/cmake
+
 //The directory containing a CMake configuration file for catkin.
 catkin_DIR:PATH=/opt/ros/kinetic/share/catkin/cmake
 
@@ -793,6 +799,12 @@ iai_kinect2_BINARY_DIR:STATIC=/home/jonathan/Desktop/Projects/WidowX200_RL/build
 
 //Value Computed by CMake
 iai_kinect2_SOURCE_DIR:STATIC=/home/jonathan/Desktop/Projects/WidowX200_RL/src/iai_kinect2/iai_kinect2
+
+//Value Computed by CMake
+image_server_BINARY_DIR:STATIC=/home/jonathan/Desktop/Projects/WidowX200_RL/build/image_server
+
+//Value Computed by CMake
+image_server_SOURCE_DIR:STATIC=/home/jonathan/Desktop/Projects/WidowX200_RL/src/image_server
 
 //The directory containing a CMake configuration file for image_transport.
 image_transport_DIR:PATH=/opt/ros/kinetic/share/image_transport/cmake
@@ -1043,6 +1055,9 @@ roslz4_DIR:PATH=/opt/ros/kinetic/share/roslz4/cmake
 //The directory containing a CMake configuration file for rospack.
 rospack_DIR:PATH=/opt/ros/kinetic/share/rospack/cmake
 
+//The directory containing a CMake configuration file for rospy,.
+rospy,_DIR:PATH=rospy,_DIR-NOTFOUND
+
 //The directory containing a CMake configuration file for rospy.
 rospy_DIR:PATH=/opt/ros/kinetic/share/rospy/cmake
 
@@ -1111,6 +1126,12 @@ urdf_DIR:PATH=/opt/ros/kinetic/share/urdf/cmake
 
 //The directory containing a CMake configuration file for urdfdom_py.
 urdfdom_py_DIR:PATH=/opt/ros/kinetic/share/urdfdom_py/cmake
+
+//Value Computed by CMake
+video_stream_opencv_BINARY_DIR:STATIC=/home/jonathan/Desktop/Projects/WidowX200_RL/build/video_stream_opencv
+
+//Value Computed by CMake
+video_stream_opencv_SOURCE_DIR:STATIC=/home/jonathan/Desktop/Projects/WidowX200_RL/src/video_stream_opencv
 
 //The directory containing a CMake configuration file for visualization_msgs.
 visualization_msgs_DIR:PATH=/opt/ros/kinetic/share/visualization_msgs/cmake
@@ -1283,7 +1304,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=26
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=22
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP

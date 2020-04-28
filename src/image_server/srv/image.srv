@@ -1,0 +1,4 @@
+int32 image_height
+int32 image_width
+---
+float32[] image

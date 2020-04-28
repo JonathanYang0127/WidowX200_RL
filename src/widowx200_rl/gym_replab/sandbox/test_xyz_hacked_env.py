@@ -51,7 +51,7 @@ def drop_at_random_location(env_drop):
     goal = [0, 0, 0]
     goal[0] = np.random.uniform(low=0.18, high=0.30)
     goal[1] = np.random.uniform(low=-0.17, high=0.13)
-    goal[2] = 0.07
+    goal[2] = 0.1
     env_drop.set_goal(goal)
     obs = env_drop.reset(gripper=False)
     quat = ik.get_cartesian_pose()[3:]

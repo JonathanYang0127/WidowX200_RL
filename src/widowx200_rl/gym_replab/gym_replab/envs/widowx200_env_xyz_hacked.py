@@ -44,7 +44,6 @@ class WidowX200EnvXYZHacked(gym.Env):
         self._grasp_detector = grasp_detector
         self._transpose_image = transpose_image
 
-        self._image_puller = utils.USBImagePuller()
         self.depth_image_service = None
 
         self.goal = None
@@ -62,7 +61,7 @@ class WidowX200EnvXYZHacked(gym.Env):
         goal = np.array([0, 0, 0], dtype = 'float32')
         goal[0] = np.random.uniform(low=0.18, high=0.30)
         goal[1] = np.random.uniform(low=-0.17, high=0.13)
-        goal[2] = 0.1
+        goal[2] = 0.14
         ik_command = self.ik._calculate_ik(goal, self.quat)[0][:5]
         self.joint_publisher.publish(np.array(ik_command, dtype='float32'))
         self.current_pos = np.array(rospy.wait_for_message(
@@ -139,7 +138,8 @@ class WidowX200EnvXYZHacked(gym.Env):
 
 
     def pull_image(self):
-        img = utils.process_image_rgb(self._image_puller.pull_image(), *self.image_shape)
+        img = utils.get_image(*self.image_shape)
+        print(img.shape)
         if self._transpose_image:
             img = np.transpose(img, (2, 0, 1))
             img = np.float32(img.flatten())/255.0
@@ -176,13 +176,13 @@ class WidowX200EnvXYZHacked(gym.Env):
                 print("Getting Image")
                 #self._image_puller = None
                 #self._image_puller = utils.USBImagePuller()
-                image0 = self._image_puller.pull_image()
+                image0 = utils.get_image(512, 512)
                 rospy.sleep(0.5)
                 self.drop_at_random_location()
                 self.move_to_neutral()
                 #self._image_puller = None
                 #self._image_puller = utils.USBImagePuller()
-                image1 = self._image_puller.pull_image()
+                image1 = utils.get_image(512, 512)
                 rospy.sleep(0.5)
                 object_grasped = utils.grasp_success_blob_detector(image0, image1, True)
                 if object_grasped:

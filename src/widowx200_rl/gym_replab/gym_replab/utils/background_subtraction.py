@@ -25,6 +25,7 @@ def background_subtraction(image0, image1, save_image=False):
     cv2.imwrite("image0.png", image0)
     cv2.imwrite("image1.png", image1)
     diff = cv2.absdiff(image1, image0)
+    print(diff.shape)
     mask = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
     print("mask.shape", mask.shape)
     imask = mask > MASK_DIFF_THRESH
@@ -82,6 +83,8 @@ def apply_blob_detection(img, save_image = False):
     if save_image:
         img_with_keypoints = cv2.drawKeypoints(img, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
         cv2.imwrite("keypoints.png", img_with_keypoints)
+    if len(keypoints) == 1 and keypoints[0].size < 10:
+        return False
     return len(keypoints) == 1
 
 
