@@ -111,7 +111,7 @@ def drop_at_random_location(env_drop):
 
 def scripted_grasp(env, data_xyz, data_joint):
     env.move_to_neutral()
-    time.sleep(1.0), reset_object = True
+    time.sleep(1.0)
     pc_data = gym_replab.utils.get_center_and_second_pc(depth_image_service)
     if pc_data is None:
         return None

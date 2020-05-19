@@ -22,8 +22,8 @@ def get_curr_image(rgb_image_service):
     return gym_replab.utils.get_rgb_image(rgb_image_service)
 
 def background_subtraction(image0, image1, save_image=False):
-    cv2.imwrite("image0.png", image0)
-    cv2.imwrite("image1.png", image1)
+    cv2.imwrite("/home/jonathan/Desktop/Projects/image0.png", image0)
+    cv2.imwrite("/home/jonathan/Desktop/Projects/image1.png", image1)
     diff = cv2.absdiff(image1, image0)
     print(diff.shape)
     mask = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
@@ -38,8 +38,8 @@ def background_subtraction(image0, image1, save_image=False):
     print("canvas", canvas)
 
     if save_image:
-        cv2.imwrite("rgbdiff.png", diff)
-        cv2.imwrite("diff.png", canvas)
+        cv2.imwrite("/home/jonathan/Desktop/Projects/rgbdiff.png", diff)
+        cv2.imwrite("/home/jonathan/Desktop/Projects/diff.png", canvas)
     return diff, canvas
 
 def is_object_missing(canvas):
@@ -72,6 +72,8 @@ def apply_blob_detection(img, save_image = False):
     params.filterByCircularity = False
     params.filterByInertia = True
     params.filterByConvexity = False
+    params.minArea = 3.14*20*20
+    params.maxArea= 3.14*70*70
     ver = (cv2.__version__).split('.')
     if int(ver[0]) < 3 :
         detector = cv2.SimpleBlobDetector(params)
@@ -82,7 +84,7 @@ def apply_blob_detection(img, save_image = False):
     keypoints = detector.detect(img)
     if save_image:
         img_with_keypoints = cv2.drawKeypoints(img, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-        cv2.imwrite("keypoints.png", img_with_keypoints)
+        cv2.imwrite("/home/jonathan/Desktop/Projects/keypoints.png", img_with_keypoints)
     if len(keypoints) == 1 and keypoints[0].size < 10:
         return False
     return len(keypoints) == 1

@@ -171,7 +171,7 @@ def scripted_grasp(env, data_xyz, data_joint):
 
         print(diff)
         print(np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])[:2]))
-        next_obs, reward, done, info = env.step(diff)
+        next_obs, reward, done, info = env.step(np.append(diff, 1.0))
         #data_xyz.append([obs, np.append(diff, action[4]), next_obs, reward, done])
         #data_joint.append([obs, action, next_obs, reward, done])
         obs = next_obs

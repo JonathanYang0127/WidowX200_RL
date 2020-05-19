@@ -7,3 +7,5 @@ devel/
 build/
 .catkin_workspace
 src/widowx200_rl/gym_replab/data
+*.make
+
