@@ -11,7 +11,7 @@ from PIL import Image
 parser = argparse.ArgumentParser()
 parser.add_argument("--data_save_directory", type=str, default="WidowX200GraspV5")
 parser.add_argument("--num_trajectories", type=int, default=1000)
-parser.add_argument("--num_timesteps", type=int, default=40)
+parser.add_argument("--num_timesteps", type=int, default=50)
 parser.add_argument("--video_save_frequency", type=int,
                     default=1, help="Set to zero for no video saving")
 
@@ -43,10 +43,12 @@ def make_dirs():
 def scripted_grasp(env, data_xyz, data_joint):
     env.move_to_neutral()
     time.sleep(1.0)
-    '''
+
     pc_data = gym_replab.utils.get_center_and_second_pc(depth_image_service)
-    if pc_data is None:
-        return None
+    while pc_data is None:
+        env.drop_at_random_location()
+        env.move_to_neutral()
+        pc_data = gym_replab.utils.get_center_and_second_pc(depth_image_service)
     else:
         goal, object_vector = pc_data
     goal = np.append(goal, 0.067)
@@ -54,9 +56,7 @@ def scripted_grasp(env, data_xyz, data_joint):
     goal[0] += np.random.uniform(low = -0.02, high = 0.03)
     goal[1] += np.random.uniform(low = -0.015, high = 0.015)
     goal[2] -= 0.01
-    '''
 
-    goal = np.array([0.25, 0, 0.067])
     env.set_goal(goal)
     obs = env.reset()
     quat = ik.get_cartesian_pose()[3:]
@@ -112,7 +112,9 @@ def scripted_grasp(env, data_xyz, data_joint):
             print('Grasping object')
         elif obs['achieved_goal'][2] < env.reward_height_thresh:
             #print(obs['desired_goal'][2], obs['achieved_goal'][2], abs(obs['desired_goal'][2] - obs['achieved_goal'][2]))
-            diff = np.array([0, 0, 0.18])
+            center = np.array([0.24, -0.04, 0])
+            diff = center - obs['achieved_goal']
+            diff[2] = 0.2
             diff *= 5
             diff = gym_replab.utils.enforce_normalization(diff)
             gripper = -1

@@ -56,7 +56,7 @@ class Widow200GraspV5Env(gym.Env):
 
         self._gripper_closed = -0.3
         self._gripper_open = 0.6
-        self.reward_height_thresh = 0.125
+        self.reward_height_thresh = 0.14
 
 
     def _get_reward(self, episode_over):
@@ -189,8 +189,10 @@ class Widow200GraspV5Env(gym.Env):
 
         if lift:
             rospy.sleep(0.5)
-            lift_target = self.ik.get_cartesian_pose()[:3]
-            lift_target[2] += 0.04
+
+            lift_target = 0.1 * (np.array([0.24, -0.04, 0]) - self.current_pos[:3]) \
+                + self.current_pos[:3]
+            lift_target[2] += 0.06
             self.move_to_xyz(lift_target, 0.5)
 
         return self._generate_step_tuple(terminate)
