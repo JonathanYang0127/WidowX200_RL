@@ -25,3 +25,5 @@ for i in range(6):
 for i in range(10):
     next_obs, reward, done, info = env.step([1, 0, 1, 0, -1, 0])
     print(next_obs['observation'][2])
+
+env.step([1, 0, 1, 0, -1, 1])

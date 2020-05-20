@@ -56,11 +56,11 @@ class Widow200GraspV5Env(gym.Env):
 
         self._gripper_closed = -0.3
         self._gripper_open = 0.6
-        self._reward_height_thresh = 1.2
+        self.reward_height_thresh = 0.125
 
 
     def _get_reward(self, episode_over):
-        if self.current_pos[3] < self._reward_height_thresh:
+        if self.current_pos[3] < self.reward_height_thresh:
             return REWARD_FAIL
         if self._grasp_detector == 'background_subtraction':
             if episode_over:
@@ -108,6 +108,7 @@ class Widow200GraspV5Env(gym.Env):
             obs['achieved_goal'] = self.current_pos[:3]
             obs['gripper'] = self.current_pos[8]
             obs['image'] = self.pull_image()
+            obs['render'] = self.render()
             obs['state'] =  self.current_pos[3:9]
         elif self._obs_mode == 'pixel_state':
             obs['image'] = self.pull_image()
@@ -187,11 +188,16 @@ class Widow200GraspV5Env(gym.Env):
         rospy.sleep(0.1)
 
         if lift:
+            rospy.sleep(0.5)
             lift_target = self.ik.get_cartesian_pose()[:3]
             lift_target[2] += 0.04
             self.move_to_xyz(lift_target, 0.5)
 
         return self._generate_step_tuple(terminate)
+
+
+    def set_goal(self, goal):
+        self.goal = goal
 
 
     def _generate_step_tuple(self, episode_over):
@@ -259,7 +265,7 @@ class Widow200GraspV5Env(gym.Env):
 
 
     def render(self):
-        return self.pull_image()
+        return utils.get_image(*self.image_shape)
 
 
     def get_info(self):
