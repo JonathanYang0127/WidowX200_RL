@@ -21,10 +21,13 @@ import random
 from .. import utils
 
 
+REWARD_FAIL = 0.0
+REWARD_SUCCESS = 1.0
+
 class Widow200GraspV5Env(gym.Env):
     def __init__(self, observation_mode='verbose', reward_type='sparse', grasp_detector='background_subtraction', transpose_image = False):
         #Normalized action space
-        self.action_space = spaces.Box(low=np.array([-1, -1, -1, -0.5, 0, 0]),
+        self.action_space = spaces.Box(low=np.array([-1, -1, -1, -0.5, -1, 0]),
                                        high=np.array([1, 1, 1, 0.5, 1, 1]), dtype=np.float32)
 
         self.joint_space = spaces.Box(low=np.array([-0.5, -0.25, -0.25, -0.25, -0.5]),
@@ -53,38 +56,42 @@ class Widow200GraspV5Env(gym.Env):
 
         self._gripper_closed = -0.3
         self._gripper_open = 0.6
+        self._reward_height_thresh = 1.2
 
 
-        def _get_reward(self, episode_over):
-            if self._grasp_detector == 'background_subtraction':
-                if episode_over:
-                    rospy.sleep(2.0)
-                    print("Getting Image")
-                    image0 = utils.get_image(512, 512)
-                    rospy.sleep(0.5)
-                    self.drop_at_random_location()
-                    self.move_to_neutral()
-                    #self._image_puller = None
-                    #self._image_puller = utils.USBImagePuller()
-                    rospy.sleep(1.0)
-                    image1 = utils.get_image(512, 512)
-                    rospy.sleep(0.5)
-                    object_grasped = utils.grasp_success_blob_detector(image0, image1, True)
-                    if object_grasped:
-                        print("****************Object Grasp Succeeded!!!******************")
-                    else:
-                        print("****************Object Grasp Failed!!!******************")
-                return REWARD_NEGATIVE
-            elif grasp_detector == 'depth':
-                if self._reward_type == 'sparse':
-                    if episode_over and utils.check_if_object_grasped(self.depth_image_service):
-                        print("****************Object Grasp Succeeded!!!******************")
-                        return REWARD_POSITIVE
-                    elif episode_over:
-                        print("****************Object Grasp Failed!!!******************")
-                        if utils.check_if_object_grasped(self.depth_image_service):
-                            self.drop_at_random_location()
-                    return REWARD_NEGATIVE
+    def _get_reward(self, episode_over):
+        if self.current_pos[3] < self._reward_height_thresh:
+            return REWARD_FAIL
+        if self._grasp_detector == 'background_subtraction':
+            if episode_over:
+                self.move_to_neutral()
+                rospy.sleep(2.0)
+                print("Getting Image")
+                image0 = utils.get_image(512, 512)
+                rospy.sleep(0.5)
+                self.drop_at_random_location()
+                self.move_to_neutral()
+                #self._image_puller = None
+                #self._image_puller = utils.USBImagePuller()
+                rospy.sleep(1.0)
+                image1 = utils.get_image(512, 512)
+                rospy.sleep(0.5)
+                object_grasped = utils.grasp_success_blob_detector(image0, image1, True)
+                if object_grasped:
+                    print("****************Object Grasp Succeeded!!!******************")
+                else:
+                    print("****************Object Grasp Failed!!!******************")
+            return REWARD_FAIL
+        elif grasp_detector == 'depth':
+            if self._reward_type == 'sparse':
+                if episode_over and utils.check_if_object_grasped(self.depth_image_service):
+                    print("****************Object Grasp Succeeded!!!******************")
+                    return REWARD_SUCCESS
+                elif episode_over:
+                    print("****************Object Grasp Failed!!!******************")
+                    if utils.check_if_object_grasped(self.depth_image_service):
+                        self.drop_at_random_location()
+                return REWARD_FAIL
 
 
     def get_observation(self):
@@ -116,6 +123,8 @@ class Widow200GraspV5Env(gym.Env):
         '''
         # is_gripper_open = self._is_gripper_open()
         is_gripper_open = self._is_gripper_open
+        lift = False
+
         if gripper_action > 0.5 and is_gripper_open:
             # keep it open
             gripper = self._gripper_open
@@ -130,6 +139,7 @@ class Widow200GraspV5Env(gym.Env):
             # gripper is open and we want to close it
             gripper = self._gripper_closed
             # we will also lift the object up a little
+            lift = True
             self._is_gripper_open = False
         elif gripper_action <= 0.5 and gripper_action >= -0.5:
             # maintain current status
@@ -140,7 +150,7 @@ class Widow200GraspV5Env(gym.Env):
         else:
             raise NotImplementedError
 
-        return gripper
+        return gripper, lift
 
 
     def step(self, action):
@@ -149,10 +159,13 @@ class Widow200GraspV5Env(gym.Env):
         action: [x, y, z, wrist, gripper, terminate]
         '''
         action = np.array(action, dtype='float32')
-        action = np.clip(action, self.action_space.low, self.action_space.high) / 5
-        wrist = action[3] * 2
+        action = np.clip(action, self.action_space.low, self.action_space.high)
         gripper = action[4]
         terminate = action[5] > 0.5
+
+        action /= 5
+        wrist = action[3] * 2
+
 
         pos = self.ik.get_cartesian_pose()[:3]
         pos += action[:3]
@@ -161,33 +174,36 @@ class Widow200GraspV5Env(gym.Env):
         action = utils.compute_ik_solution(pos, self.quat, self.joint_space.low, self.joint_space.high, self.ik)
         action[4] = wrist
 
-        gripper = self._gripper_simulate(gripper)
+        gripper, lift = self._gripper_simulate(gripper)
 
         if self.current_pos is not None and self.current_pos[2] < 0.067:
             action = np.append(action, np.array([[gripper]], dtype='float32'))
         else:
-            action = np.append(action, np.array([gripper], dtype='float32'))
+            action = np.append(action, np.array([[gripper]], dtype='float32'))
 
         self.action_publisher.publish(action)
         self.current_pos = np.array(rospy.wait_for_message(
             "/widowx_env/action/observation", numpy_msg(Floats)).data)
         rospy.sleep(0.1)
 
+        if lift:
+            lift_target = self.ik.get_cartesian_pose()[:3]
+            lift_target[2] += 0.04
+            self.move_to_xyz(lift_target, 0.5)
+
         return self._generate_step_tuple(terminate)
 
 
     def _generate_step_tuple(self, episode_over):
         info = {}
-        if episode_over:
-            self.lift_object()
 
         reward = self._get_reward(episode_over)
         if reward > 0:
             info['grasp_success'] =  1.0
         else:
-            info['grasp_success'] =  0.0.
+            info['grasp_success'] =  0.0
 
-        return self._get_obs(), reward, episode_over, info
+        return self.get_observation(), reward, episode_over, info
 
 
     def reset(self, gripper = True):
@@ -207,6 +223,31 @@ class Widow200GraspV5Env(gym.Env):
     def move_to_neutral(self):
         self.neutral_publisher.publish("MOVE_TO_NEUTRAL")
         rospy.sleep(1.0)
+
+
+    def move_to_xyz(self, pos, wait = 1):
+        ik_command = self.ik._calculate_ik(pos, self.quat)[0][:5]
+        self.joint_publisher.publish(np.array(ik_command, dtype='float32'))
+        self.current_pos = np.array(rospy.wait_for_message(
+            "/widowx_env/action/observation", numpy_msg(Floats)).data)
+        rospy.sleep(wait)
+
+
+    def drop_at_random_location(self):
+        goal = np.array([0, 0, 0], dtype = 'float32')
+        goal[0] = np.random.uniform(low=0.18, high=0.30)
+        goal[1] = np.random.uniform(low=-0.17, high=0.13)
+        goal[2] = 0.14
+        ik_command = self.ik._calculate_ik(goal, self.quat)[0][:5]
+        self.joint_publisher.publish(np.array(ik_command, dtype='float32'))
+        self.current_pos = np.array(rospy.wait_for_message(
+            "/widowx_env/action/observation", numpy_msg(Floats)).data)
+        rospy.sleep(1)
+        action = np.array([0, 0, 0, 0, 0, 0.6], dtype='float32')
+        self.action_publisher.publish(action)
+        self.current_pos = np.array(rospy.wait_for_message(
+            "/widowx_env/action/observation", numpy_msg(Floats)).data)
+        rospy.sleep(1)
 
 
     def pull_image(self):

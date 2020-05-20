@@ -27,5 +27,7 @@ env.reset()
 depth_image_service = env.depth_image_service
 rgb_image_service = gym_replab.utils.KinectImageService('rgb')
 
-for i in range(20):
-    env.step([0, -1, 0, 0])
+for i in range(5):
+    env.step([1, 0, 1, 0])
+
+env.step([1, 0, -1, 0])
