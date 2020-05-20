@@ -161,7 +161,7 @@ class Widow200GraspV5Env(gym.Env):
         '''
         action = np.array(action, dtype='float32')
         action = np.clip(action, self.action_space.low, self.action_space.high)
-        gripper = action[4]
+        gripper_command = action[4]
         terminate = action[5] > 0.5
 
         action /= 5
@@ -175,7 +175,7 @@ class Widow200GraspV5Env(gym.Env):
         action = utils.compute_ik_solution(pos, self.quat, self.joint_space.low, self.joint_space.high, self.ik)
         action[4] = wrist
 
-        gripper, lift = self._gripper_simulate(gripper)
+        gripper, lift = self._gripper_simulate(gripper_command)
 
         if self.current_pos is not None and self.current_pos[2] < 0.067:
             action = np.append(action, np.array([[gripper]], dtype='float32'))
@@ -195,7 +195,12 @@ class Widow200GraspV5Env(gym.Env):
             lift_target[2] += 0.06
             self.move_to_xyz(lift_target, 0.5)
 
-        return self._generate_step_tuple(terminate)
+        step_tuple = self._generate_step_tuple(terminate)
+        
+        #Add joint information to step tuple
+        step_tuple[3]['joint_command'] = np.append(action[:5], \
+            np.array([[gripper_command, terminate]], dtype='float32'))
+        return step_tuple
 
 
     def set_goal(self, goal):

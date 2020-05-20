@@ -135,7 +135,7 @@ def scripted_grasp(env, data_xyz, data_joint):
         print(diff)
         next_obs, reward, done, info = env.step(diff)
         data_xyz.append([obs, diff, next_obs, reward, done])
-        data_joint.append([obs, diff, next_obs, reward, done])
+        data_joint.append([obs, info['joint_command'], next_obs, reward, done])
         obs = next_obs
 
         if done:
@@ -147,11 +147,10 @@ def scripted_grasp(env, data_xyz, data_joint):
     return goal
 
 
-def store_trajectory(object_grasped, data_xyz, data_joint, params):
+def store_trajectory(data_xyz, data_joint, params):
     pool_xyz = gym_replab.utils.DemoPool()
     pool_joint = gym_replab.utils.DemoPool()
-    data_xyz[args.num_timesteps - 1][3] = 1 if object_grasped else 0
-    data_joint[args.num_timesteps - 1][3] = 1 if object_grasped else 0
+
     for i in range(args.num_timesteps):
         obs, nobs = data_xyz[i][0], data_xyz[i][2]
         modified_obs = {'image': obs['image'], 'state': obs['state']}
@@ -173,20 +172,12 @@ def store_trajectory(object_grasped, data_xyz, data_joint, params):
           '{}_pool_{}_joint.pkl'.format(timestamp, pool_joint.size))
 
 
-grasp_successful = False
 if __name__ == '__main__':
+    make_dirs()
     for i in range(10000):
         data_xyz = []
         data_joint = []
-        make_dirs()
         goal = scripted_grasp(env, data_xyz, data_joint)
-        #image0 = gym_replab.utils.get_rgb_image(rgb_image_service)
-        #object_grasped = drop_at_random_location(env_drop)
-        #image1 = gym_replab.utils.get_rgb_image(rgb_image_service)
-        #object_grasped = gym_replab.utils.grasp_success(image0, image1)
-        #if object_grasped:
-        #    print("*****SUCCESS*****")
-    #    else:
-    #        print("*****FAIL*****")
-    #    if goal is not None:
-    #        store_trajectory(object_grasped, data_xyz, data_joint, {'goal': goal})
+
+        if goal is not None:
+            store_trajectory(data_xyz, data_joint, {'goal': goal})
