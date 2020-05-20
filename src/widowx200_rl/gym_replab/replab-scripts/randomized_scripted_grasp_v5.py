@@ -110,9 +110,9 @@ def scripted_grasp(env, data_xyz, data_joint):
             gripper = -1
             terminate = 0
             print('Grasping object')
-        elif obs['achieved_goal'][2] < env.reward_height_thresh:
+        elif obs['achieved_goal'][2] < env.reward_height_thresh + 0.01:
             #print(obs['desired_goal'][2], obs['achieved_goal'][2], abs(obs['desired_goal'][2] - obs['achieved_goal'][2]))
-            center = np.array([0.24, -0.04, 0])
+            center = np.array([0.20, -0.04, 0])
             diff = center - obs['achieved_goal']
             diff[2] = 0.2
             diff *= 5
@@ -122,13 +122,12 @@ def scripted_grasp(env, data_xyz, data_joint):
             gripper_closed = True
             print('Lifting object')
         else:
-            diff = np.array([0, 0, 0.05])
+            diff = np.array([0, 0, 0.2])
             diff *= 5
             diff = gym_replab.utils.enforce_normalization(diff)
             gripper = -1
             terminate = 1
             print('Done!')
-
 
         print(np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])[:2]))
         diff = np.append(diff, [[0, gripper, terminate]])
@@ -151,7 +150,7 @@ def store_trajectory(data_xyz, data_joint, params):
     pool_xyz = gym_replab.utils.DemoPool()
     pool_joint = gym_replab.utils.DemoPool()
 
-    for i in range(args.num_timesteps):
+    for i in range(len(data_xyz)):
         obs, nobs = data_xyz[i][0], data_xyz[i][2]
         modified_obs = {'image': obs['image'], 'state': obs['state']}
         modified_nobs = {'image': nobs['image'], 'state': nobs['state']}

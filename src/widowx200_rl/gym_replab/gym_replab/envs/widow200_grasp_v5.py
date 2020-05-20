@@ -52,7 +52,7 @@ class Widow200GraspV5Env(gym.Env):
 
         self.image_shape = (64, 64)
         self._is_gripper_open = True
-        self._upwards_bias = 0.05
+        self._upwards_bias = 0.03
 
         self._gripper_closed = -0.3
         self._gripper_open = 0.6
@@ -60,7 +60,10 @@ class Widow200GraspV5Env(gym.Env):
 
 
     def _get_reward(self, episode_over):
-        if self.current_pos[3] < self.reward_height_thresh:
+        if episode_over:
+            print("HEIGHT: ", self.current_pos[2])
+        if self.current_pos[2] < self.reward_height_thresh:
+            print("****************Target Threshold Not Reached!!!******************")
             return REWARD_FAIL
         if self._grasp_detector == 'background_subtraction':
             if episode_over:
@@ -79,8 +82,10 @@ class Widow200GraspV5Env(gym.Env):
                 object_grasped = utils.grasp_success_blob_detector(image0, image1, True)
                 if object_grasped:
                     print("****************Object Grasp Succeeded!!!******************")
+                    return REWARD_SUCCESS
                 else:
                     print("****************Object Grasp Failed!!!******************")
+                    return REWARD_FAIL
             return REWARD_FAIL
         elif grasp_detector == 'depth':
             if self._reward_type == 'sparse':
@@ -190,13 +195,13 @@ class Widow200GraspV5Env(gym.Env):
         if lift:
             rospy.sleep(0.5)
 
-            lift_target = 0.1 * (np.array([0.24, -0.04, 0]) - self.current_pos[:3]) \
+            lift_target = 0.1 * (np.array([0.20, -0.04, 0]) - self.current_pos[:3]) \
                 + self.current_pos[:3]
             lift_target[2] += 0.06
             self.move_to_xyz(lift_target, 0.5)
 
         step_tuple = self._generate_step_tuple(terminate)
-        
+
         #Add joint information to step tuple
         step_tuple[3]['joint_command'] = np.append(action[:5], \
             np.array([[gripper_command, terminate]], dtype='float32'))
