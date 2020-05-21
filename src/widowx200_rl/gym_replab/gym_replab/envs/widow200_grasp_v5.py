@@ -62,7 +62,7 @@ class Widow200GraspV5Env(gym.Env):
     def _get_reward(self, episode_over):
         if episode_over:
             print("HEIGHT: ", self.current_pos[2])
-        if self.current_pos[2] < self.reward_height_thresh:
+        if self.current_pos[2] < self.reward_height_thresh and episode_over:
             print("****************Target Threshold Not Reached!!!******************")
             return REWARD_FAIL
         if self._grasp_detector == 'background_subtraction':
@@ -193,7 +193,7 @@ class Widow200GraspV5Env(gym.Env):
         rospy.sleep(0.1)
 
         if lift:
-            rospy.sleep(0.5)
+            rospy.sleep(1)
 
             lift_target = 0.1 * (np.array([0.20, -0.04, 0]) - self.current_pos[:3]) \
                 + self.current_pos[:3]
@@ -201,6 +201,8 @@ class Widow200GraspV5Env(gym.Env):
             self.move_to_xyz(lift_target, 0.5)
 
         step_tuple = self._generate_step_tuple(terminate)
+        if terminate:
+            print("REWARD:", step_tuple[1])
 
         #Add joint information to step tuple
         step_tuple[3]['joint_command'] = np.append(action[:5], \
@@ -254,7 +256,7 @@ class Widow200GraspV5Env(gym.Env):
     def drop_at_random_location(self):
         goal = np.array([0, 0, 0], dtype = 'float32')
         goal[0] = np.random.uniform(low=0.18, high=0.30)
-        goal[1] = np.random.uniform(low=-0.17, high=0.13)
+        goal[1] = np.random.uniform(low=-0.17, high=0.12)
         goal[2] = 0.14
         ik_command = self.ik._calculate_ik(goal, self.quat)[0][:5]
         self.joint_publisher.publish(np.array(ik_command, dtype='float32'))

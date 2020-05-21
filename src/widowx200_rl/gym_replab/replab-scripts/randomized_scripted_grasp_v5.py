@@ -44,13 +44,17 @@ def scripted_grasp(env, data_xyz, data_joint):
     env.move_to_neutral()
     time.sleep(1.0)
 
+    pc_loop_counter = 0
     pc_data = gym_replab.utils.get_center_and_second_pc(depth_image_service)
-    while pc_data is None:
+    while pc_data is None or pc_data[0][0] >= 0.45:
         env.drop_at_random_location()
         env.move_to_neutral()
         pc_data = gym_replab.utils.get_center_and_second_pc(depth_image_service)
-    else:
-        goal, object_vector = pc_data
+        pc_loop_counter += 1
+        if pc_loop_counter >= 5:
+            sys.exit(0)
+
+    goal, object_vector = pc_data
     goal = np.append(goal, 0.067)
     print(goal)
     goal[0] += np.random.uniform(low = -0.02, high = 0.03)
@@ -64,7 +68,7 @@ def scripted_grasp(env, data_xyz, data_joint):
     low_clip = env.action_space.low[:5]
     high_clip = env.action_space.high[:5]
 
-
+    #termination_height = np.random.uniform(0.11, 0.13)
     images = []
 
     gripper_closed = False
@@ -90,7 +94,7 @@ def scripted_grasp(env, data_xyz, data_joint):
             terminate = 0
             print('Moving to object')
         elif (abs(obs['desired_goal'][2] - obs['achieved_goal'][2]) > 0.01 \
-             or np.linalg.norm(obs['desired_goal'] - obs['achieved_goal']) > 0.04) \
+             or np.linalg.norm(obs['desired_goal'] - obs['achieved_goal']) > 0.06) \
              and not gripper_closed:
             #print(obs['desired_goal'][2], obs['achieved_goal'][2], abs(obs['desired_goal'][2] - obs['achieved_goal'][2]))
             diff = obs['desired_goal'] - obs['achieved_goal']
@@ -101,7 +105,7 @@ def scripted_grasp(env, data_xyz, data_joint):
             gripper = 1
             terminate = 0
             print('Lowering arm')
-        elif obs['joints'][5] > 0.1:
+        elif obs['joints'][5] > 0.3:
             #print(obs['desired_goal'][2], obs['achieved_goal'], abs(obs['desired_goal'][2] - obs['achieved_goal'][2]))
             diff = np.array([0, 0, 0])
             diff *= 5
@@ -110,11 +114,12 @@ def scripted_grasp(env, data_xyz, data_joint):
             gripper = -1
             terminate = 0
             print('Grasping object')
-        elif obs['achieved_goal'][2] < env.reward_height_thresh + 0.01:
+        elif obs['achieved_goal'][2] < env.reward_height_thresh + 0.001:
             #print(obs['desired_goal'][2], obs['achieved_goal'][2], abs(obs['desired_goal'][2] - obs['achieved_goal'][2]))
             center = np.array([0.20, -0.04, 0])
             diff = center - obs['achieved_goal']
             diff[2] = 0.2
+            diff = gym_replab.utils.add_noise(diff)
             diff *= 5
             diff = gym_replab.utils.enforce_normalization(diff)
             gripper = -1
@@ -138,7 +143,7 @@ def scripted_grasp(env, data_xyz, data_joint):
         obs = next_obs
 
         if done:
-            return goal
+            break
 
     images[0].save('{}/scripted_grasp.gif'.format(video_save_path),
                        format='GIF', append_images=images[1:],
@@ -172,11 +177,14 @@ def store_trajectory(data_xyz, data_joint, params):
 
 
 if __name__ == '__main__':
-    make_dirs()
     for i in range(10000):
+        #Make a new directory for each timestamp
+        make_dirs()
+
         data_xyz = []
         data_joint = []
         goal = scripted_grasp(env, data_xyz, data_joint)
+
 
         if goal is not None:
             store_trajectory(data_xyz, data_joint, {'goal': goal})
