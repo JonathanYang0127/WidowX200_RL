@@ -7,6 +7,7 @@ GRIPPER_OPEN = 1.8
 GRIPPER_CLOSED = -1.0
 NEUTRAL_JOINTS = [1.57, -1.80, -0.62, -2.0, 0.00]
 #NEUTRAL_JOINTS = [1.57, -1.79, -1.67, -0.83, 0]
+RESET_JOINTS_SLACK = [1.57, -0.6, -0.62, -1.57, 0.00]
 RESET_JOINTS = [1.57, -0.6, -0.6, -1.57, 1.57]
 JOINT_MIN = np.array([
     -3.1,
@@ -14,7 +15,7 @@ JOINT_MIN = np.array([
     -1.571,
     -1.745,
     -2.617,
-    -1.0
+    -2.0
 ])
 JOINT_MAX = np.array([
     3.1,
@@ -22,7 +23,7 @@ JOINT_MAX = np.array([
     1.571,
     1.745,
     2.617,
-    1.0
+    2.0
 ])
 MOVE_WAIT_TIME = 0.02
 GRIPPER_WAIT_TIME = 0.1

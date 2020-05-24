@@ -33,10 +33,10 @@ class Widow200GraspV5Env(gym.Env):
         self.joint_space = spaces.Box(low=np.array([-0.5, -0.25, -0.25, -0.25, -0.5]),
                                        high=np.array([0.5, 0.25, 0.25, 0.25, 0.5]), dtype=np.float32)
 
-        self.observation_space = Dict({'image': spaces.Box(low=np.array([-3.0, -3.0, -3.0, -3.0, -3.9, -3.0]),
+        self.observation_space = Dict({'image': spaces.Box(low=np.array([-3.0, -3.0, -3.0, -3.0, -3.0, -3.0]),
                                       high=np.array([3.0, 3.0, 3.0, 3.0, 3.0, 3.0]), dtype=np.float32)})
 
-        self._safety_box = spaces.Box(low=np.array([0.11, -0.22, 0.064]),
+        self._safety_box = spaces.Box(low=np.array([0.12, -0.22, 0.064]),
                                       high=np.array([0.37, 0.14, 0.2]), dtype=np.float32)
 
         self._obs_mode = observation_mode
@@ -70,7 +70,8 @@ class Widow200GraspV5Env(gym.Env):
                 self.move_to_neutral()
                 rospy.sleep(2.0)
                 print("Getting Image")
-                image0 = utils.get_image(512, 512)
+                image0 = utils.get_image(512, 512)            #print( np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])[:2]) )
+
                 rospy.sleep(0.5)
                 self.drop_at_random_location()
                 self.move_to_neutral()
@@ -198,7 +199,7 @@ class Widow200GraspV5Env(gym.Env):
             lift_target = 0.1 * (np.array([0.20, -0.04, 0]) - self.current_pos[:3]) \
                 + self.current_pos[:3]
             lift_target[2] += 0.06
-            self.move_to_xyz(lift_target, 0.5)
+            self.move_to_xyz(lift_target, wrist = self.current_pos[7], wait = 0.5)
 
         step_tuple = self._generate_step_tuple(terminate)
         if terminate:
@@ -245,8 +246,10 @@ class Widow200GraspV5Env(gym.Env):
         rospy.sleep(1.0)
 
 
-    def move_to_xyz(self, pos, wait = 1):
+    def move_to_xyz(self, pos, wrist = None, wait = 1):
         ik_command = self.ik._calculate_ik(pos, self.quat)[0][:5]
+        if wrist is not None:
+            ik_command[4] = wrist
         self.joint_publisher.publish(np.array(ik_command, dtype='float32'))
         self.current_pos = np.array(rospy.wait_for_message(
             "/widowx_env/action/observation", numpy_msg(Floats)).data)
@@ -254,20 +257,27 @@ class Widow200GraspV5Env(gym.Env):
 
 
     def drop_at_random_location(self):
+        self.reset_publisher.publish("NO_GRIPPER")
+        rospy.sleep(1.5)
         goal = np.array([0, 0, 0], dtype = 'float32')
         goal[0] = np.random.uniform(low=0.18, high=0.30)
-        goal[1] = np.random.uniform(low=-0.17, high=0.12)
+        goal[1] = np.random.uniform(low=-0.17, high=0.11)
         goal[2] = 0.14
         ik_command = self.ik._calculate_ik(goal, self.quat)[0][:5]
         self.joint_publisher.publish(np.array(ik_command, dtype='float32'))
         self.current_pos = np.array(rospy.wait_for_message(
             "/widowx_env/action/observation", numpy_msg(Floats)).data)
         rospy.sleep(1)
-        action = np.array([0, 0, 0, 0, 0, 0.6], dtype='float32')
-        self.action_publisher.publish(action)
-        self.current_pos = np.array(rospy.wait_for_message(
-            "/widowx_env/action/observation", numpy_msg(Floats)).data)
-        rospy.sleep(1)
+        self.open_gripper()
+
+
+    def open_gripper(self):
+        while self.current_pos[8] < 1.2:
+            action = np.array([0, 0, 0, 0, 0, 0.6], dtype='float32')
+            self.action_publisher.publish(action)
+            self.current_pos = np.array(rospy.wait_for_message(
+                "/widowx_env/action/observation", numpy_msg(Floats)).data)
+            rospy.sleep(0.2)
 
 
     def pull_image(self):

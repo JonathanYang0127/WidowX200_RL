@@ -9,7 +9,7 @@ import sys
 from PIL import Image
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--data_save_directory", type=str, default="WidowX200GraspV5")
+parser.add_argument("--data_save_directory", type=str, default="WidowX200GraspV5New")
 parser.add_argument("--num_trajectories", type=int, default=1000)
 parser.add_argument("--num_timesteps", type=int, default=50)
 parser.add_argument("--video_save_frequency", type=int,
@@ -55,11 +55,11 @@ def scripted_grasp(env, data_xyz, data_joint):
             sys.exit(0)
 
     goal, object_vector = pc_data
-    goal = np.append(goal, 0.067)
+    goal = np.append(goal, 0.066)
     print(goal)
-    goal[0] += np.random.uniform(low = -0.02, high = 0.03)
-    goal[1] += np.random.uniform(low = -0.015, high = 0.015)
-    goal[2] -= 0.01
+    goal[0] += np.random.uniform(low = -0.03, high = 0.03)
+    goal[1] += np.random.uniform(low = -0.03, high = 0.03)
+    goal[2] += np.random.uniform(low = -0.005, high = 0.005)
 
     env.set_goal(goal)
     obs = env.reset()
@@ -69,6 +69,10 @@ def scripted_grasp(env, data_xyz, data_joint):
     high_clip = env.action_space.high[:5]
 
     #termination_height = np.random.uniform(0.11, 0.13)
+    random_rotate = np.random.uniform(-1.0, 1.0)
+    print(random_rotate)
+    wrist_rotate = obs['joints'][5] + random_rotate
+    wrist_rotate = min(2.6, wrist_rotate)
     images = []
 
     gripper_closed = False
@@ -90,6 +94,7 @@ def scripted_grasp(env, data_xyz, data_joint):
             diff = gym_replab.utils.add_noise(diff)
             diff *= 5
             diff = gym_replab.utils.enforce_normalization(diff)
+            wrist_diff = wrist_rotate - obs['joints'][4]
             gripper = 1
             terminate = 0
             print('Moving to object')
@@ -102,6 +107,7 @@ def scripted_grasp(env, data_xyz, data_joint):
             diff = gym_replab.utils.add_noise(diff)
             diff *= 5
             diff = gym_replab.utils.enforce_normalization(diff)
+            wrist_diff = wrist_rotate - obs['joints'][4]
             gripper = 1
             terminate = 0
             print('Lowering arm')
@@ -110,6 +116,7 @@ def scripted_grasp(env, data_xyz, data_joint):
             diff = np.array([0, 0, 0])
             diff *= 5
             diff = gym_replab.utils.enforce_normalization(diff)
+            wrist_diff = 0
             gripper_closed = True
             gripper = -1
             terminate = 0
@@ -122,6 +129,7 @@ def scripted_grasp(env, data_xyz, data_joint):
             diff = gym_replab.utils.add_noise(diff)
             diff *= 5
             diff = gym_replab.utils.enforce_normalization(diff)
+            wrist_diff = 0
             gripper = -1
             terminate = 0
             gripper_closed = True
@@ -130,12 +138,14 @@ def scripted_grasp(env, data_xyz, data_joint):
             diff = np.array([0, 0, 0.2])
             diff *= 5
             diff = gym_replab.utils.enforce_normalization(diff)
+            wrist_diff = 0
             gripper = -1
             terminate = 1
             print('Done!')
 
         print(np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])[:2]))
-        diff = np.append(diff, [[0, gripper, terminate]])
+        wrist_diff += np.random.normal(0, 0.05)
+        diff = np.append(diff, [[wrist_diff * 3, gripper, terminate]])
         print(diff)
         next_obs, reward, done, info = env.step(diff)
         data_xyz.append([obs, diff, next_obs, reward, done])

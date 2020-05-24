@@ -19,7 +19,11 @@ class WidowXController:
         '''
         Move arm to specified joint values
         '''
-        self._multiple_joints_pub.publish(JointCommands(joint_values))
+        joint_command = [0, 0, 0, 0, 0]
+        for i in range(5):
+            joint_command[i] = max(joint_values[i], JOINT_MIN[i])
+            joint_command[i] = min(joint_values[i], JOINT_MAX[i])
+        self._multiple_joints_pub.publish(JointCommands(joint_command))
         rospy.sleep(MOVE_WAIT_TIME)
 
 
@@ -34,6 +38,8 @@ class WidowXController:
         '''
         Move arm to reset position
         '''
+        #self.move_to_target_joints(RESET_JOINTS_SLACK)
+        #rospy.sleep(1.0)
         self.move_to_target_joints(RESET_JOINTS)
 
 
