@@ -33,11 +33,14 @@ class Widow200GraspV5Env(gym.Env):
         self.joint_space = spaces.Box(low=np.array([-0.5, -0.25, -0.25, -0.25, -0.5]),
                                        high=np.array([0.5, 0.25, 0.25, 0.25, 0.5]), dtype=np.float32)
 
-        self.observation_space = Dict({'image': spaces.Box(low=np.array([-3.0, -3.0, -3.0, -3.0, -3.0, -3.0]),
-                                      high=np.array([3.0, 3.0, 3.0, 3.0, 3.0, 3.0]), dtype=np.float32)})
-
         self._safety_box = spaces.Box(low=np.array([0.12, -0.22, 0.064]),
                                       high=np.array([0.37, 0.14, 0.2]), dtype=np.float32)
+
+        self.image_shape = (64, 64)
+        self.observation_space = Dict({'state': spaces.Box(low=np.array([-3.0, -3.0, -3.0, -3.0, -3.0, -3.0]),
+                                      high=np.array([3.0, 3.0, 3.0, 3.0, 3.0, 3.0]), dtype=np.float32),
+                                      'image': spaces.Box(low=np.array([0]*self.image_shape[0]*self.image_shape[1]*3),
+                                            high=np.array([255]*self.image_shape[0]*self.image_shape[1]*3), dtype=np.float32)})
 
         self._obs_mode = observation_mode
         self._reward_type = reward_type
@@ -50,7 +53,6 @@ class Widow200GraspV5Env(gym.Env):
         self.ik = InverseKinematics()
         self.quat = np.array([0.5, 0.5, -0.5, 0.5], dtype=np.float32)
 
-        self.image_shape = (64, 64)
         self._is_gripper_open = True
         self._upwards_bias = 0.03
 
@@ -260,7 +262,7 @@ class Widow200GraspV5Env(gym.Env):
         self.reset_publisher.publish("NO_GRIPPER")
         rospy.sleep(1.5)
         goal = np.array([0, 0, 0], dtype = 'float32')
-        goal[0] = np.random.uniform(low=0.18, high=0.30)
+        goal[0] = np.random.uniform(low=0.20, high=0.32)
         goal[1] = np.random.uniform(low=-0.17, high=0.11)
         goal[2] = 0.14
         ik_command = self.ik._calculate_ik(goal, self.quat)[0][:5]

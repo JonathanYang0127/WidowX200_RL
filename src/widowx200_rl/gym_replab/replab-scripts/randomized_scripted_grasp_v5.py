@@ -9,7 +9,7 @@ import sys
 from PIL import Image
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--data_save_directory", type=str, default="WidowX200GraspV5New")
+parser.add_argument("--data_save_directory", type=str, default="WidowX200GraspV5New-2")
 parser.add_argument("--num_trajectories", type=int, default=1000)
 parser.add_argument("--num_timesteps", type=int, default=50)
 parser.add_argument("--video_save_frequency", type=int,

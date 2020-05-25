@@ -3,8 +3,8 @@ import pickle as pkl
 import gym_replab
 import numpy as np
 
-data_dir = '/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspNew4'
-save_dir = '/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspNewJointCombined'
+data_dir = '/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspV5New'
+save_dir = '/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspV5Combined'
 training_pool = gym_replab.utils.DemoPool()
 validation_pool = gym_replab.utils.DemoPool()
 counter = 0
@@ -37,7 +37,7 @@ def combine_data():
         for d in dirs:
             for r1, d1, f1 in os.walk(os.path.join(root, d)):
                 for data_file in f1:
-                    if 'pool' in data_file and 'joint' in data_file and is_successful(os.path.join(r1, data_file)):
+                    if 'pool' in data_file and 'xyz' in data_file and is_successful(os.path.join(r1, data_file)):
                         add_trajectory(os.path.join(r1, data_file))
                 break
         break
