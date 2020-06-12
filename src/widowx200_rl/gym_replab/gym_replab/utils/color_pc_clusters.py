@@ -14,44 +14,31 @@ from sklearn.cluster import dbscan
 # TRAY_UPPERBOUND = np.array([0.2334, 0.1443, 0.7494]) - np.array([margin, margin, 0])
 
 # New Widow200 Settings
-TRAY_CENTER = np.array([0.045, 0.17, 0.77])
-margin = 0.02
+TRAY_CENTER = np.array([0.045, 0.18, 0.77])
+margin = 0.005
 TRAY_LOWERBOUND = np.array([-0.17, -0.1,  0.59]) + np.array([margin, margin, 0])
 # --Teddy in the corner: [-0.13604932, -0.07284055,  0.8274319]
 TRAY_UPPERBOUND = np.array([0.24, 0.27, 0.86]) - np.array([margin, margin, 0])
-PC_TO_ROBOT_TRANSMATRIX = [[-0.01496006, -1.010562,   -0.00676992],
+PC_TO_ROBOT_TRANSMATRIX = [[-0.06615727, -1.0101724,  -0.01188006],
+ [ 0.02312255, -1.0735426,   0.09813   ],
+ [ 1.4007295,  -1.0461842,   0.07868756],
+ [-0.76175237,  0.9465672,  -0.00566131]]
+
+
+'''
+[[-0.03544489, -0.9962406,  -0.01087087],
+ [ 2.0491197,   0.5424257,   0.7908279 ],
+ [ 3.2895164,   0.46542087,  0.675236  ],
+ [-2.4824793,  -0.4407873,  -0.560822  ]]
+'''
+
+'''
+[[-0.01496006, -1.010562,   -0.00676992],
  [-0.73063487,  0.7163494,   0.06193807],
  [ 0.7545282,   0.6659575,  -0.02627169],
  [-0.17217335, -0.61602306,  0.07385541]]
-
-
-'''
-[[-0.04526588, -1.0601507,  -0.03006035],
- [-0.6675662,   1.3758066,   1.3756248 ],
- [ 0.76216495,  1.2217574,   1.1757375 ],
- [-0.17433396, -1.1544311,  -1.0439159 ]]
 '''
 
-'''
-[[-0.0597151,  -0.9729351,   0.01423957],
- [-1.2820418,   0.5726913,   0.22235085],
- [-0.05873162,  0.66139185,  0.20489293],
- [ 0.38401318, -0.54253435, -0.10233778]]
-'''
-
-'''
- [[-0.09595145, -1.0233254,  -0.01970807],
- [-0.28985283,  0.6516628,   0.60822797],
- [ 1.1925,      0.7318452,   0.6549972 ],
- [-0.60263586, -0.58985865, -0.45343027]]
- '''
-
-'''
-[[-0.09791446, -1.0184524,  -0.0192177 ],
- [-3.7841015,  -2.2033608,   0.29452783],
- [-3.2073226,  -2.824164,    0.34469584],
- [ 2.856357,    2.2066314,  -0.20683573]]
-'''
 
 PCD_IN = "pc0.pcd"
 VERBOSE = True
@@ -73,8 +60,8 @@ def filter_pcd_to_pc_array(pcd_in):
     """
     # old replab settings: (0.6, 0.83, 0.24)
     LOW_DIST_THRESH = 0.65 # 0.6
-    HIGH_DIST_THRESH = 0.95 # 0.83
-    TRAY_RADIUS = 0.26 # 0.24
+    HIGH_DIST_THRESH = 0.85 # 0.83
+    TRAY_RADIUS = 0.24 # 0.24
     pc_in = pcl.load_XYZRGB(pcd_in) # load input point cloud
     pc_in_array = np.asarray(pc_in)
     pc_out_array = pc_in_array.copy()
@@ -175,6 +162,7 @@ def get_pc_cluster_center(pcd_in=PCD_IN):
 
     # plot cluster_centers in point cloud as concentrated blobs:
     #print("Clusters on the tray:")
+    #cluster_centers.sort(lambda x: np.linalg.norm(TRAY_CENTER))
     for i in range(len(set(labels)) - 1): #exclude the noise cluster
         cc_i_x, cc_i_y, cc_i_z = cluster_centers[i]
         if (cluster_centers[i] >= TRAY_LOWERBOUND).all() and (cluster_centers[i] <= TRAY_UPPERBOUND).all(): # i == 4:

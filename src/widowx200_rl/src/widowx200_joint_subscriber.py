@@ -25,6 +25,8 @@ def initialize_publishers_and_subscribers():
         "/widowx_env/action", numpy_msg(Floats), take_action)
     joint_subscriber = rospy.Subscriber(
         "/widowx_env/joint/command", numpy_msg(Floats), move_to_joints)
+    gripper_subscriber = rospy.Subscriber(
+        "widowx_env/gripper/command", String, gripper_cb)
     neutral_subscriber = rospy.Subscriber(
         "/widowx_env/neutral", String, neutral_cb)
     observation_subscriber = rospy.Subscriber(
@@ -52,10 +54,11 @@ def take_action(data):
     Action [joint_1, joint_2, joint_3, joint_4, joint_5, gripper_joint]
     """
     action = data.data
-    assert action.shape[0] == 6
-    gripper_action = action[-1]
+    assert action.shape[0] == 6 or action.shape[0] == 5
+    if action.shape[0] == 6:
+        gripper_action = action[-1]
+        widowx_controller.move_gripper(gripper_action * 3)
     action = action[:-1]
-    widowx_controller.move_gripper(gripper_action * 3)
     target_joints = widowx_controller._ik.get_joint_angles()[:5] + action
     widowx_controller.move_to_target_joints(target_joints)
     rospy.sleep(0.05)
@@ -84,6 +87,13 @@ def reset(data):
     if data.data != "NO_GRIPPER":
         while widowx_controller._ik.get_joint_angles()[5] < 1.6:
              widowx_controller.open_gripper()
+
+
+def gripper_cb(data):
+    if data.data == 'CLOSE':
+        widowx_controller.close_gripper()
+    else:
+        widowx_controller.open_gripper()
 
 
 def neutral_cb(data):

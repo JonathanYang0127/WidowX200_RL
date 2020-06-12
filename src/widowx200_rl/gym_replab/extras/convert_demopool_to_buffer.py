@@ -3,7 +3,7 @@ from railrl.data_management.obs_dict_replay_buffer import \
 import pickle
 import numpy as np
 
-file = '/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspV5Combined/combined_training_pool.pkl'
+file = '/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspV5ShortCombined/combined_training_pool.pkl'
 with open(file, 'rb') as f:
     data = pickle.load(f)
 
@@ -16,7 +16,7 @@ actions = []
 rewards = []
 terminals = []
 
-
+ret = 0
 for arr_obs, arr_action, arr_nobs, arr_reward, arr_done in zip(data['observations'], data['actions'], \
     data['next_observations'], data['rewards'], data['terminals']):
     o, a, next_o, r, d = arr_obs[0], arr_action, arr_nobs[0], arr_reward[0], arr_done[0]
@@ -25,6 +25,10 @@ for arr_obs, arr_action, arr_nobs, arr_reward, arr_done in zip(data['observation
     terminals.append(d)
     actions.append(a)
     next_observations.append(next_o)
+    if r == 1:
+        ret += 1
+
+print(ret)
 
 actions = np.array(actions)
 if len(actions.shape) == 1:

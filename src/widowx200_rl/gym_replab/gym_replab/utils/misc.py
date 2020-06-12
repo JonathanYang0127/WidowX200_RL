@@ -13,7 +13,7 @@ from math import asin, sin, cos, sqrt, acos
 
 def add_noise(diff):
     new_diff = np.copy(diff)
-    new_diff += np.random.normal(0, 0.06, (3,)) - 0.0
+    new_diff += np.random.normal(0, 0.18, (3,)) - 0.0
     return new_diff
 
 

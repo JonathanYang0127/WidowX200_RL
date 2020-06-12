@@ -20,11 +20,14 @@ class InverseKinematics():
         rospy.sleep(2.0)
 
 
-    def _reset_pybullet(self):
+    def _reset_pybullet(self, joint_angles = None):
         '''
         Reset pybullet sim to current joint angles
         '''
-        for i, angle in enumerate(self.get_joint_angles()):
+        assert joint_angles is None or len(joint_angles) == 6
+        if joint_angles is None:
+            joint_angles = self.get_joint_angles()
+        for i, angle in enumerate(joint_angles):
             p.resetJointState(self._armID, i, angle)
 
 
@@ -69,11 +72,11 @@ class InverseKinematics():
         return joint_angle, None
 
 
-    def get_cartesian_pose(self):
+    def get_cartesian_pose(self, joint_angles=None):
         '''
         Get xyz pose for arm (computes from simulation)
         '''
-        self._reset_pybullet()
+        self._reset_pybullet(joint_angles)
         position, quat = p.getLinkState(self._armID, 5, computeForwardKinematics=1)[4:6]
         return np.array(list(position) + list(quat), dtype='float32')
 

@@ -1,6 +1,6 @@
 import os
 
-data_dir = '/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspV5New'
+data_dir = '/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspV5ShortPixelState'
 
 
 def remove_bad_data():
@@ -12,7 +12,7 @@ def remove_bad_data():
         for d in dirs:
             count += 1
             for r1, d1, f1 in os.walk(os.path.join(root, d)):
-                if len(d1)+len(f1) < 5:
+                if len(d1)+len(f1) < 3:
                     delete.append(os.path.join(root, d))
                 break
         break

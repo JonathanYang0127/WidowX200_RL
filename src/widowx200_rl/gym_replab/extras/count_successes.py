@@ -1,7 +1,7 @@
 import os
 import pickle as pkl
 
-data_dir = '/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspV5New'
+data_dir = '/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspV5ShortControlled'
 
 
 def is_successful(data_file):
@@ -30,5 +30,6 @@ def count_successes():
         break
 
     print('Success rate: {} / {}'.format(s, total))
+
 
 count_successes()
