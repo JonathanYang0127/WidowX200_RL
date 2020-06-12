@@ -73,7 +73,6 @@ class Widow200GraspV5Env(gym.Env):
                 rospy.sleep(2.0)
                 print("Getting Image")
                 image0 = utils.get_image(512, 512)[100:]            #print( np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])[:2]) )
-
                 rospy.sleep(0.5)
                 self.drop_at_random_location(False)
                 self.move_to_background_subtract()
@@ -304,7 +303,7 @@ class Widow200GraspV5Env(gym.Env):
             try:
                 self.joint_publisher.publish(np.array(ik_command, dtype='float32'))
                 self.current_pos = np.array(rospy.wait_for_message(
-                    "/widowx_env/action/observation", numpy_msg(Floats)).data)
+                    "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
                 rospy.sleep(1)
                 break
             except:
