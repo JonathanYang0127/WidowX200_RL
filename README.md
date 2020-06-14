@@ -3,7 +3,7 @@
 ## Installation
 The WidowX200 RL is built on top of IAI Kinect 2, video_stream_opencv, and Interbotix ROS Arms.
 
-###Setting up the Kinect
+### Setting up the Kinect
 First install libfreenect2 to by following the instructions in:
 https://github.com/OpenKinect/libfreenect2
 
