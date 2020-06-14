@@ -1,6 +1,8 @@
 *.pyc
 *.egg-info/*
 src/interbotix_ros_arms
+src/video_stream_opencv
+src/iai_kinect2
 *.png
 *.pcd
 devel/
