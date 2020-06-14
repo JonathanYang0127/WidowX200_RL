@@ -33,8 +33,8 @@ class Widow200GraspV5Env(gym.Env):
         self.joint_space = spaces.Box(low=np.array([-0.6, -0.6, -0.6, -0.6, -0.6]),
                                        high=np.array([0.6, 0.6, 0.6, 0.6, 0.6]), dtype=np.float32)
 
-        self._safety_box = spaces.Box(low=np.array([0.12, -0.22, 0.055]),
-                                      high=np.array([0.36, 0.20, 0.2]), dtype=np.float32)
+        self._safety_box = spaces.Box(low=np.array([0.12, -0.22, 0.054]),
+                                      high=np.array([0.38, 0.20, 0.2]), dtype=np.float32)
 
         self.image_shape = (64, 64)
         self.observation_space = Dict({'state': spaces.Box(low=np.array([-3.0, -3.0, -3.0, -3.0, -3.0, -3.0]),
@@ -72,14 +72,14 @@ class Widow200GraspV5Env(gym.Env):
                 self.move_to_background_subtract()
                 rospy.sleep(2.0)
                 print("Getting Image")
-                image0 = utils.get_image(512, 512)[100:]            #print( np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])[:2]) )
+                image0 = utils.get_image(512, 512)[150:]            #print( np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])[:2]) )
                 rospy.sleep(0.5)
                 self.drop_at_random_location(False)
                 self.move_to_background_subtract()
                 #self._image_puller = None
                 #self._image_puller = utils.USBImagePuller()
                 rospy.sleep(1.0)
-                image1 = utils.get_image(512, 512)[100:]
+                image1 = utils.get_image(512, 512)[150:]
                 rospy.sleep(0.5)
                 object_grasped = utils.grasp_success_blob_detector(image0, image1, True)
                 if object_grasped:
@@ -295,7 +295,7 @@ class Widow200GraspV5Env(gym.Env):
             self.reset_publisher.publish("NO_GRIPPER")
             rospy.sleep(1.5)
         goal = np.array([0, 0, 0], dtype = 'float32')
-        goal[0] = np.random.uniform(low=0.20, high=0.30)
+        goal[0] = np.random.uniform(low=0.20, high=0.32)
         goal[1] = np.random.uniform(low=-0.17, high=0.11)
         goal[2] = 0.14
         ik_command = self.ik._calculate_ik(goal, self.quat)[0][:5]
@@ -312,8 +312,15 @@ class Widow200GraspV5Env(gym.Env):
 
 
     def open_gripper(self):
-        self.gripper_publisher.publish("OPEN")
-        rospy.sleep(1)
+        while self.current_pos[8] < 1.2:
+            self.gripper_publisher.publish("OPEN")
+            rospy.sleep(1)
+            try:
+                self.get_observation_publisher.publish("GET_OBSERVATION")
+                self.current_pos = np.array(rospy.wait_for_message(
+                "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
+            except:
+                continue
 
 
     def pull_image(self):

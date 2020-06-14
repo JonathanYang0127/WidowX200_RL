@@ -7,9 +7,11 @@ import argparse
 import os
 import sys
 from PIL import Image
+#7:49
+#12:30 325/709
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--data_save_directory", type=str, default="WidowX200GraspV5ShortControlled")
+parser.add_argument("--data_save_directory", type=str, default="WidowX200GraspV5ShortControlledNew")
 parser.add_argument("--num_trajectories", type=int, default=1000)
 parser.add_argument("--num_timesteps", type=int, default=20)
 parser.add_argument("--video_save_frequency", type=int,
@@ -59,8 +61,8 @@ def scripted_grasp(env, data_xyz, data_joint):
     print(goal)
     #goal[0] += np.random.uniform(low = -0.03, high = 0.03)
     #goal[1] += np.random.uniform(low = -0.03, high = 0.03)
-    goal[0] += np.random.normal(0, 0.012)
-    goal[1] += np.random.normal(0, 0.012)
+    goal[0] += np.random.normal(0, 0.018)
+    goal[1] += np.random.normal(0, 0.018)
     k = np.random.random()
     if k < 0.2:
         goal[2] += np.random.uniform(low = 0.01, high = 0.03)
@@ -68,6 +70,7 @@ def scripted_grasp(env, data_xyz, data_joint):
         goal[2] += np.random.uniform(low = -0.005, high = 0.005)
 
     print("GOAL HEIGHT: ", goal[2])
+    goal = np.clip(goal, env._safety_box.low, env._safety_box.high)
     env.set_goal(goal)
     obs = env.reset()
     quat = ik.get_cartesian_pose()[3:]
@@ -163,12 +166,14 @@ def scripted_grasp(env, data_xyz, data_joint):
         print(diff)
         next_obs, reward, done, info = env.step(diff)
         if info['timeout']:
+            env.open_gripper()
             return None
         data_xyz.append([obs, diff, next_obs, reward, done])
         data_joint.append([obs, info['joint_command'], next_obs, reward, done])
         obs = next_obs
 
         if done:
+            env.open_gripper()
             break
 
     images[0].save('{}/scripted_grasp.gif'.format(video_save_path),

@@ -16,7 +16,7 @@ from sklearn.cluster import dbscan
 # New Widow200 Settings
 TRAY_CENTER = np.array([0.045, 0.18, 0.77])
 margin = 0.005
-TRAY_LOWERBOUND = np.array([-0.17, -0.1,  0.59]) + np.array([margin, margin, 0])
+TRAY_LOWERBOUND = np.array([-0.18, -0.1,  0.59]) + np.array([margin, margin, 0])
 # --Teddy in the corner: [-0.13604932, -0.07284055,  0.8274319]
 TRAY_UPPERBOUND = np.array([0.24, 0.27, 0.86]) - np.array([margin, margin, 0])
 PC_TO_ROBOT_TRANSMATRIX = [[-0.06615727, -1.0101724,  -0.01188006],
@@ -119,6 +119,7 @@ def cluster_pc_array(pc_array, pc_to_robot_transmatrix=PC_TO_ROBOT_TRANSMATRIX):
     #print("Clusters on the tray:")
     for i in range(len(set(labels)) - 1): #exclude the noise cluster
         cc_i_x, cc_i_y, cc_i_z = cluster_centers[i]
+        print(cluster_centers[i], "*****")
         if (cluster_centers[i] >= TRAY_LOWERBOUND).all() and (cluster_centers[i] <= TRAY_UPPERBOUND).all(): # i == 4:
             if VERBOSE:
                 print(
