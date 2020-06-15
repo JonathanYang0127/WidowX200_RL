@@ -1,7 +1,7 @@
 import os
 import pickle as pkl
 
-data_dir = '/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspV5ShortControlledNew'
+data_dir = '/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspV5ShortControlledNewHeight'
 
 
 def is_successful(data_file):

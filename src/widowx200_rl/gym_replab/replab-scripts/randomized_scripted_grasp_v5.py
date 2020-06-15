@@ -11,7 +11,7 @@ from PIL import Image
 #12:30 325/709
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--data_save_directory", type=str, default="WidowX200GraspV5ShortControlledNew")
+parser.add_argument("--data_save_directory", type=str, default="WidowX200GraspV5ShortControlledNewHeight")
 parser.add_argument("--num_trajectories", type=int, default=1000)
 parser.add_argument("--num_timesteps", type=int, default=20)
 parser.add_argument("--video_save_frequency", type=int,
@@ -61,11 +61,11 @@ def scripted_grasp(env, data_xyz, data_joint):
     print(goal)
     #goal[0] += np.random.uniform(low = -0.03, high = 0.03)
     #goal[1] += np.random.uniform(low = -0.03, high = 0.03)
-    goal[0] += np.random.normal(0, 0.018)
-    goal[1] += np.random.normal(0, 0.018)
+    goal[0] += np.random.normal(0, 0.012)
+    goal[1] += np.random.normal(0, 0.012)
     k = np.random.random()
-    if k < 0.2:
-        goal[2] += np.random.uniform(low = 0.01, high = 0.03)
+    if k < 0.3:
+        goal[2] += np.random.uniform(low = 0.01, high = 0.04)
     else:
         goal[2] += np.random.uniform(low = -0.005, high = 0.005)
 
@@ -121,7 +121,7 @@ def scripted_grasp(env, data_xyz, data_joint):
             diff *= 2
             print(diff[2], "ASDASDA")
             #if diff[2]  0:
-            diff[2] = -0.5
+            diff[2] *= 2
             diff = gym_replab.utils.add_noise(diff)
             diff = gym_replab.utils.enforce_normalization(diff)
             wrist_diff = wrist_rotate - obs['joints'][4]
