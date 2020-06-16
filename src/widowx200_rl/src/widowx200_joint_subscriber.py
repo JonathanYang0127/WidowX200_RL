@@ -58,18 +58,18 @@ def take_action(data):
     if action.shape[0] == 6:
         gripper_action = action[-1]
         widowx_controller.move_gripper(gripper_action * 3)
-    action = action[:-1]
+    action = action[:5]
     target_joints = widowx_controller._ik.get_joint_angles()[:5] + action
     widowx_controller.move_to_target_joints(target_joints)
-    rospy.sleep(0.05)
+    rospy.sleep(0.25)
     current_state = np.array(get_state(), dtype=np.float32)
     observation_publisher.publish(current_state)
 
 
 def move_to_joints(data):
     widowx_controller.move_to_target_joints(data.data)
+    rospy.sleep(0.5)
     current_state = np.array(get_state(), dtype=np.float32)
-    rospy.sleep(0.05)
     observation_publisher.publish(current_state)
 
 

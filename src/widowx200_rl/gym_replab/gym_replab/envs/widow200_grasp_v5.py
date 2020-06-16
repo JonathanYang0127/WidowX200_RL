@@ -140,6 +140,7 @@ class Widow200GraspV5Env(gym.Env):
             # gripper is currently closed and we want to open it
             gripper = self._gripper_open
             self._is_gripper_open = True
+            self.open_gripper()
         elif gripper_action < -0.5 and not is_gripper_open:
             # keep it closed
             gripper = self._gripper_closed
@@ -149,6 +150,7 @@ class Widow200GraspV5Env(gym.Env):
             # we will also lift the object up a little
             lift = True
             self._is_gripper_open = False
+            self.close_gripper()
         elif gripper_action <= 0.5 and gripper_action >= -0.5:
             # maintain current status
             if is_gripper_open:
@@ -180,17 +182,13 @@ class Widow200GraspV5Env(gym.Env):
         pos += action[:3]
         pos[2] += self._upwards_bias         #ik has a downwards bias for some reason
         pos = np.clip(np.array(pos, dtype=np.float32), self._safety_box.low, self._safety_box.high)
-        action = utils.compute_ik_solution(pos, self.quat, self.joint_space.low, self.joint_space.high, self.ik)
-        action[4] = wrist
+        joint_action = utils.compute_ik_solution(pos, self.quat, self.joint_space.low, self.joint_space.high, self.ik)
+        joint_action[4] = wrist
 
         gripper, lift = self._gripper_simulate(gripper_command)
 
-        if self.current_pos is not None and self.current_pos[2] < 0.067:
-            action = np.append(action, np.array([[gripper]], dtype='float32'))
-        else:
-            action = np.append(action, np.array([[gripper]], dtype='float32'))
+        self.action_publisher.publish(joint_action)
 
-        self.action_publisher.publish(action)
         try:
             self.current_pos = np.array(rospy.wait_for_message(
                 "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
@@ -202,15 +200,11 @@ class Widow200GraspV5Env(gym.Env):
         except:
             return None, None, None, {'timeout': True}
 
-        rospy.sleep(0.2)
-
         if lift:
-            rospy.sleep(1)
-
-            lift_target = 0.1 * (np.array([0.14, -0.04, 0]) - self.current_pos[:3]) \
-                + self.current_pos[:3]
-            lift_target[2] += 0.08
-            moved = self.move_to_xyz(lift_target, wrist = self.current_pos[7], wait = 0.5)
+            rospy.sleep(0.2)
+            lift_target = np.array([0.16, -0.04, self.reward_height_thresh + 0.04])
+            moved = self.move_to_xyz(lift_target, wrist = self.current_pos[7], wait = 0.2)
+            print(self.current_pos[2])
             if not moved:
                 return None, None, None, {'timeout': True}
 
@@ -314,6 +308,17 @@ class Widow200GraspV5Env(gym.Env):
     def open_gripper(self):
         while self.current_pos[8] < 1.2:
             self.gripper_publisher.publish("OPEN")
+            rospy.sleep(1)
+            try:
+                self.get_observation_publisher.publish("GET_OBSERVATION")
+                self.current_pos = np.array(rospy.wait_for_message(
+                "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
+            except:
+                continue
+
+    def close_gripper(self):
+        while self.current_pos[8] > 0.3:
+            self.gripper_publisher.publish("CLOSE")
             rospy.sleep(1)
             try:
                 self.get_observation_publisher.publish("GET_OBSERVATION")
