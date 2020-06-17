@@ -15,8 +15,12 @@ register(id='widowx200xyzhacked-v0',
          entry_point='gym_replab.envs:WidowX200EnvXYZHacked',
          )
 
-register(id='widow200graspv5-v0',
-         entry_point='gym_replab.envs:Widow200GraspV5Env',
+register(id='Widow200RealRobotGraspV5-v0',
+         entry_point='gym_replab.envs:Widow200RealRobotGraspV5Env',
+         )
+
+register(id='Widow200RealRobotGraspV6-v0',
+         entry_point='gym_replab.envs:Widow200RealRobotGraspV6Env',
          )
 
 def make(id, *args, **kwargs):

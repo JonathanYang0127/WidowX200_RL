@@ -3,7 +3,7 @@ import pickle as pkl
 import gym_replab
 import numpy as np
 
-data_dirs = ['/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspV5ShortControlled']
+data_dirs = ['/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspV5ShortControlledNewHeight']
 
 save_dir = '/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspV5ShortCombined'
 training_pool = gym_replab.utils.DemoPool()
@@ -27,6 +27,8 @@ def add_trajectory(data_file):
     for arr_obs, arr_action, arr_nobs, arr_reward, arr_done in zip(data['observations'], data['actions'], \
         data['next_observations'], data['rewards'], data['terminals']):
         obs, action, nobs, reward, done = arr_obs[0], arr_action, arr_nobs[0], arr_reward[0], arr_done[0]
+        action[4] *= 0.7
+        action[5] *= 0.7
         if pool_type < TRAINING_FREQUENCY:
             training_pool.add_sample(obs, action, nobs, reward, done)
         else:
@@ -40,7 +42,8 @@ def combine_data(data_dirs):
             for d in dirs:
                 for r1, d1, f1 in os.walk(os.path.join(root, d)):
                     for data_file in f1:
-                        if 'pool' in data_file and 'xyz' in data_file and 'modified' not in data_file:
+                        if 'pool' in data_file and 'xyz' in data_file:
+                            print(data_file)
                             add_trajectory(os.path.join(r1, data_file))
                     break
             break

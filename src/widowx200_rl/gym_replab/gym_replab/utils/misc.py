@@ -13,15 +13,15 @@ from math import asin, sin, cos, sqrt, acos
 
 def add_noise(diff):
     new_diff = np.copy(diff)
-    new_diff += np.random.normal(0, 0.24, (3,)) - 0.0
+    new_diff += np.random.normal(0, 0.18, (3,)) - 0.0
     return new_diff
 
 
 def clip_action(diff):
     for i in range(3):
         sgn = np.sign(diff[i])
-        if abs(diff[i]) > 1:
-            diff[i] = sgn
+        if abs(diff[i]) > 0.9:
+            diff[i] = sgn * 0.9
         if abs(diff[i]) < 0.005:
             diff[i] = 0.005*sgn
 
@@ -73,7 +73,7 @@ def get_pc_object_center(kinect_image_service):
     kinect_image_service.pull_image()
     return get_pc_cluster_center()
 
-def check_if_object_grasped(kinect_image_service):
+def check_if_object_grasped_pc(kinect_image_service):
     kinect_image_service.pull_image()
     return compute_center_and_pc() is None
 

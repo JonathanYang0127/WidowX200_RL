@@ -25,7 +25,7 @@ REWARD_FAIL = 0.0
 REWARD_SUCCESS = 1.0
 
 
-class Widow200RealRobotGraspV5Env(Widow200RealRobotBaseEnv):
+class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
     def __init__(self, reward_type='sparse', **kwargs):
         super().__init__(**kwargs)
         self._reward_type = reward_type
@@ -43,9 +43,8 @@ class Widow200RealRobotGraspV5Env(Widow200RealRobotBaseEnv):
 
     def _set_action_space(self):
         #Normalized action space
-        self.action_space = spaces.Box(low=np.array([-1, -1, -1, -1, -1, 0]),
-                                       high=np.array([1, 1, 1, 1, 1, 1]), dtype=np.float32)
-
+        self.action_space = spaces.Box(low=np.array([-1, -1, -1, -1, -1]),
+                                       high=np.array([1, 1, 1, 1, 1]), dtype=np.float32)
 
     def check_if_object_grasped(self):
         if self._grasp_detector == 'background_subtraction':
@@ -63,35 +62,27 @@ class Widow200RealRobotGraspV5Env(Widow200RealRobotBaseEnv):
             rospy.sleep(0.5)
             object_grasped = utils.grasp_success_blob_detector(image0, image1, True)
             if object_grasped:
-                print("****************Object Grasp Succeeded!!!****************")
+                print("****************Object Grasp Succeeded!!!******************")
                 return True
             else:
-                print("****************Object Grasp Failed!!!****************")
+                print("****************Object Grasp Failed!!!******************")
                 return False
         elif grasp_detector == 'depth':
             if utils.check_if_object_grasped_pc(self.depth_image_service):
-                print("****************Object Grasp Succeeded!!!****************")
+                print("****************Object Grasp Succeeded!!!******************")
                 return True
             else:
-                print("****************Object Grasp Failed!!!****************")
+                print("****************Object Grasp Failed!!!******************")
                 return False
         else:
             raise NotImplementedError
 
 
-    def get_reward(self, episode_over):
-        if self._reward_type == 'sparse':
-            if not episode_over:
-                return REWARD_FAIL
-            else:
-                print("HEIGHT: ", self.current_pos[2])
-                if self.current_pos[2] < self.reward_height_thresh:
-                    print("****************Target Threshold Not Reached!!!******************")
-                    return REWARD_FAIL
-                else:
-                    return REWARD_SUCCESS if self.check_if_object_grasped() else REWARD_FAIL
+    def get_reward(self):
+        if self.current_pos[2] > self.reward_height_thresh and not self._is_gripper_open:
+            return REWARD_SUCCESS
         else:
-            raise NotImplementedError
+            return REWARD_FAIL
 
 
     def get_observation(self):
@@ -159,12 +150,11 @@ class Widow200RealRobotGraspV5Env(Widow200RealRobotBaseEnv):
     def step(self, action):
         '''
         TODO: Change quaternion based on wrist rotation
-        action: [x, y, z, wrist, gripper, terminate]
+        action: [x, y, z, wrist, gripper]
         '''
         action = np.array(action, dtype='float32')
         action = np.clip(action, self.action_space.low, self.action_space.high)
         gripper_command = action[4]
-        terminate = action[5] > 0.5
 
         action /= 3
         action[2] *= 4
@@ -201,13 +191,11 @@ class Widow200RealRobotGraspV5Env(Widow200RealRobotBaseEnv):
             if not moved:
                 return None, None, None, {'timeout': True}
 
-        step_tuple = self._generate_step_tuple(terminate)
-        if terminate:
-            print("REWARD:", step_tuple[1])
+        step_tuple = self._generate_step_tuple()
 
         #Add joint information to step tuple
         step_tuple[3]['joint_command'] = np.append(joint_action[:5], \
-            np.array([[gripper_command, terminate]], dtype='float32'))
+            np.array([[gripper_command]], dtype='float32'))
         return step_tuple
 
 
@@ -215,16 +203,12 @@ class Widow200RealRobotGraspV5Env(Widow200RealRobotBaseEnv):
         self.goal = goal
 
 
-    def _generate_step_tuple(self, episode_over):
+    def _generate_step_tuple(self):
         info = {'timeout': False}
 
-        reward = self.get_reward(episode_over)
-        if reward > 0:
-            info['grasp_success'] =  1.0
-        else:
-            info['grasp_success'] =  0.0
+        reward = self.get_reward()
 
-        return self.get_observation(), reward, episode_over, info
+        return self.get_observation(), reward, False, info
 
 
     def reset(self, gripper = True):
