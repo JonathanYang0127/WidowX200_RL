@@ -1,6 +1,13 @@
 import os
 import pickle as pkl
 import numpy as np
+import argparse
+
+
+parser.add_argument("-f", "--file", type=str,
+default="""/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/
+gym_replab/data/WidowX200GraspV5ShortCombined/combined_training_pool.pkl""")
+args = parser.parse_args()
 
 
 def read_data(data_file):
@@ -18,13 +25,10 @@ def read_data(data_file):
             c += 1
         if data['rewards'][i]:
             d += 1
-    #print(len(data['terminals'])/c)
+        for k in range(len(data['actions'][i])):
+            if abs(data['actions'][i][k]) > 1:
+                print("Magnitude greater than 1", k)
+    #print(len(data['terminals'])/c
     print(c, d)
 
-#read_data('/root/ros_ws/src/replab/replab_rl/gym_replab/data/WidowGraspASDF/2020-02-02T22-01-08/2020-02-02T22-01-08_pool_70.pkl')
-#read_data('/root/ros_ws/src/replab/replab_rl/gym_replab/data/WidowGraspModified/2020-02-01T05-02-09/2020-02-01T05-02-09_pool_70.pkl')
-#read_data('/home/jonathan/Desktop/data_continuous/combined_training_pool.pkl')
-
-#read_data('/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspV5ShortCombined/combined_training_pool.pkl')
-read_data('/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspV5ShortCombined/combined_training_pool.pkl')
-#read_data('/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspV5ShortCombinedContinuous/combined_training_pool.pkl')
+read_data(args.file)

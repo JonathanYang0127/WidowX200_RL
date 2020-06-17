@@ -101,7 +101,7 @@ def scripted_grasp_v5(env, data_xyz, data_joint):
         elif obs['achieved_goal'][2] < env.reward_height_thresh + 0.001:
             diff = np.array([0, 0, 0], dtype='float64')
             print(obs['achieved_goal'][2], "ADASD")
-            diff[2] = 1
+            diff[2] = 0.7
             wrist_diff = 0
             gripper = -0.7
             terminate = 0
@@ -115,10 +115,10 @@ def scripted_grasp_v5(env, data_xyz, data_joint):
             terminate = 0.7
             print('Done!')
 
+
+        diff = np.append(diff, [[wrist_diff * 3, gripper, terminate]])
         diff = gym_replab.utils.add_noise(diff)
         diff = gym_replab.utils.clip_action(diff)
-        wrist_diff += np.random.normal(0, 0.05)
-        diff = np.append(diff, [[wrist_diff * 3, gripper, terminate]])
         print(diff)
         next_obs, reward, done, info = env.step(diff)
 
@@ -224,10 +224,10 @@ def scripted_grasp_v6(env, data_xyz, data_joint):
             gripper = -0.7
             print('Done!')
 
+
+        diff = np.append(diff, [[wrist_diff * 3, gripper]])
         diff = gym_replab.utils.add_noise(diff)
         diff = gym_replab.utils.clip_action(diff)
-        wrist_diff += np.random.normal(0, 0.05)
-        diff = np.append(diff, [[wrist_diff * 3, gripper]])
         print(diff)
         next_obs, reward, done, info = env.step(diff)
 
@@ -330,7 +330,7 @@ if __name__ == '__main__':
     parser.add_argument("-e", "--env", type=str,
                         choices=tuple(V5_GRASPING_ENVS + V6_GRASPING_ENVS),
                         required=True)
-    parser.add_argument("--data_save_directory", type=str, default="WidowX200GraspV5ShortTest")
+    parser.add_argument("-d", "--data_save_directory", type=str, default="WidowX200GraspV5ShortTest")
     parser.add_argument("--num_trajectories", type=int, default=50000)
     parser.add_argument("--num_timesteps", type=int, default=15)
     parser.add_argument("--video_save_frequency", type=int,

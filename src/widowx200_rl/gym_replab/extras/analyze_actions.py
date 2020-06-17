@@ -1,8 +1,15 @@
-
 import os
 import pickle as pkl
 import numpy as np
 import matplotlib.pyplot as plt
+import argparse
+
+
+parser.add_argument("-f", "--file", type=str,
+default="""/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/
+gym_replab/data/WidowX200GraspV5ShortCombined/combined_training_pool.pkl""")
+args = parser.parse_args()
+
 
 def read_data(data_file):
     with open(data_file, 'rb') as fp:
@@ -15,4 +22,4 @@ def read_data(data_file):
         plt.hist(data['actions'][:, i], bins=list(np.arange(-1, 1, 0.05)))
         plt.show()
 
-read_data('/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspNewJointCombined/combined_training_pool.pkl')
+read_data(args.file)

@@ -185,8 +185,7 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
 
         if lift:
             rospy.sleep(0.2)
-            lift_target = np.array([0.16, -0.04, self.reward_height_thresh + 0.04])
-            moved = self.move_to_xyz(lift_target, wrist = self.current_pos[7], wait = 0.2)
+            moved = self.lift_object()
             print(self.current_pos[2])
             if not moved:
                 return None, None, None, {'timeout': True}

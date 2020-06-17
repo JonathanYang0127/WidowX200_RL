@@ -63,6 +63,12 @@ class Widow200RealRobotBaseEnv(gym.Env):
         raise NotImplementedError
 
 
+    def lift_object(self):
+        lift_target = np.array([0.16, -0.04, self.reward_height_thresh + 0.04])
+        moved = self.move_to_xyz(lift_target, wrist = self.current_pos[7], wait = 0.2)
+        return moved 
+
+
     def move_to_background_subtract(self):
         while True:
             try:

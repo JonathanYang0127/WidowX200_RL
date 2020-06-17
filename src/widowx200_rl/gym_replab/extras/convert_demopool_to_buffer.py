@@ -2,8 +2,15 @@ from railrl.data_management.obs_dict_replay_buffer import \
     ObsDictReplayBuffer
 import pickle
 import numpy as np
+import argparse
 
-file = '/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspV5ShortCombined/combined_training_pool.pkl'
+
+parser.add_argument("-f", "--file", type=str,
+default="""/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/
+gym_replab/data/WidowX200GraspV5ShortCombined/combined_training_pool.pkl""")
+args = parser.parse_args()
+
+file = args.file
 with open(file, 'rb') as f:
     data = pickle.load(f)
 

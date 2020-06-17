@@ -13,12 +13,12 @@ from math import asin, sin, cos, sqrt, acos
 
 def add_noise(diff):
     new_diff = np.copy(diff)
-    new_diff += np.random.normal(0, 0.18, (3,)) - 0.0
+    new_diff += np.random.normal(0, 0.18, (len(diff),)) - 0.0
     return new_diff
 
 
 def clip_action(diff):
-    for i in range(3):
+    for i in range(len(diff)):
         sgn = np.sign(diff[i])
         if abs(diff[i]) > 0.9:
             diff[i] = sgn * 0.9

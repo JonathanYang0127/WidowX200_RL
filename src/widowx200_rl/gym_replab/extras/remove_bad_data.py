@@ -1,7 +1,13 @@
 import os
+import argparse
 
-data_dir = '/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspV5ShortControlledNewHeight'
 
+parser.add_argument("-d", "--data_dir", type=str,
+default="""/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/
+gym_replab/data/WidowX200GraspV5""")
+args = parser.parse_args()
+
+data_dir = args.data_dir
 
 def remove_bad_data():
     #removes empty directories
