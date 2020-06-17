@@ -35,8 +35,6 @@ def add_trajectory(data_file):
     for arr_obs, arr_action, arr_nobs, arr_reward, arr_done in zip(data['observations'], data['actions'], \
         data['next_observations'], data['rewards'], data['terminals']):
         obs, action, nobs, reward, done = arr_obs[0], arr_action, arr_nobs[0], arr_reward[0], arr_done[0]
-        action[4] *= 0.7
-        action[5] *= 0.7
         if pool_type < TRAINING_FREQUENCY:
             training_pool.add_sample(obs, action, nobs, reward, done)
         else:
