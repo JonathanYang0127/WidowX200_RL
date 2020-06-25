@@ -167,7 +167,7 @@ class Widow200RealRobotGraspV5Env(Widow200RealRobotBaseEnv):
         terminate = action[5] > 0.5
 
         action /= 3
-        action[2] *= 4
+        action[2] *= 4      
         wrist = action[3]
 
 

@@ -1,7 +1,7 @@
 import os
 
 import matplotlib as mpl
-mpl.use('Agg')
+mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 import pcl
 import numpy as np
@@ -16,14 +16,28 @@ from sklearn.cluster import dbscan
 # New Widow200 Settings
 TRAY_CENTER = np.array([0.045, 0.18, 0.77])
 margin = 0.005
-TRAY_LOWERBOUND = np.array([-0.18, -0.1,  0.59]) + np.array([margin, margin, 0])
+TRAY_LOWERBOUND = np.array([-0.17, -0.1,  0.59]) + np.array([margin, margin, 0])
 # --Teddy in the corner: [-0.13604932, -0.07284055,  0.8274319]
-TRAY_UPPERBOUND = np.array([0.24, 0.27, 0.86]) - np.array([margin, margin, 0])
-PC_TO_ROBOT_TRANSMATRIX = [[-0.06615727, -1.0101724,  -0.01188006],
+TRAY_UPPERBOUND = np.array([0.255, 0.275, 0.86]) - np.array([margin, margin, 0])
+PC_TO_ROBOT_TRANSMATRIX = [[-0.00806673, -1.0225087,  0.00890913],
+ [-0.9459641,  -0.9431688,   0.12770233],
+ [ 0.6464092,  -0.7664721,   0.03093858],
+ [-0.00774159,  0.75118375,  0.01848028]]
+
+
+'''
+[[-0.08161313, -0.9989024,   0.02433541],
+ [ 0.41154414,  0.85293174, -0.37298068],
+ [ 1.6611594,   0.66748065, -0.3726992 ],
+ [-0.9936331,  -0.6404617,   0.4049196 ]]
+'''
+
+'''
+[[-0.06615727, -1.0101724,  -0.01188006],
  [ 0.02312255, -1.0735426,   0.09813   ],
  [ 1.4007295,  -1.0461842,   0.07868756],
  [-0.76175237,  0.9465672,  -0.00566131]]
-
+'''
 
 '''
 [[-0.03544489, -0.9962406,  -0.01087087],

@@ -11,9 +11,16 @@ import time
 from math import asin, sin, cos, sqrt, acos
 
 
-def add_noise(diff):
+def add_noise(diff, noise_std=0.18):
     new_diff = np.copy(diff)
-    new_diff += np.random.normal(0, 0.18, (len(diff),)) - 0.0
+    new_diff += np.random.normal(0, noise_std, (len(diff),)) - 0.0
+    return new_diff
+
+
+def add_noise_custom(diff, noise_stds):
+    new_diff = np.copy(diff)
+    for i in range(len(diff)):
+        new_diff[i] += np.random.normal(0, noise_stds[i], (1,)) - 0.0
     return new_diff
 
 
@@ -22,8 +29,6 @@ def clip_action(diff):
         sgn = np.sign(diff[i])
         if abs(diff[i]) > 0.9:
             diff[i] = sgn * 0.9
-        if abs(diff[i]) < 0.005:
-            diff[i] = 0.005*sgn
 
     return diff
 
@@ -66,8 +71,11 @@ def get_rgb_image(kinect_image_service):
     return kinect_image_service.pull_image()
 
 def get_center_and_second_pc(kinect_image_service):
-    kinect_image_service.pull_image()
-    return compute_center_and_pc()
+    try:
+        kinect_image_service.pull_image()
+        return compute_center_and_pc()
+    except:
+        return None
 
 def get_pc_object_center(kinect_image_service):
     kinect_image_service.pull_image()

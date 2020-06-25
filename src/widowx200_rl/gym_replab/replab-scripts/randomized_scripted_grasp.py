@@ -26,7 +26,7 @@ def make_dirs():
         os.makedirs(video_save_path)
 
 
-def scripted_grasp_v5(env, data_xyz, data_joint):
+def scripted_grasp_v5(env, data_xyz, data_joint, noise_stds):
     env.move_to_neutral()
     time.sleep(1.0)
 
@@ -117,14 +117,14 @@ def scripted_grasp_v5(env, data_xyz, data_joint):
 
 
         diff = np.append(diff, [[wrist_diff * 3, gripper, terminate]])
-        diff = gym_replab.utils.add_noise(diff)
+        diff = gym_replab.utils.add_noise_custom(diff, noise_stds=noise_stds)
         diff = gym_replab.utils.clip_action(diff)
         print(diff)
         next_obs, reward, done, info = env.step(diff)
 
         if info['timeout']:
             env.open_gripper()
-            return None
+            return None, False
 
         data_xyz.append([obs, diff, next_obs, reward, done])
         data_joint.append([obs, info['joint_command'], next_obs, reward, done])
@@ -137,10 +137,10 @@ def scripted_grasp_v5(env, data_xyz, data_joint):
     images[0].save('{}/scripted_grasp.gif'.format(video_save_path),
                        format='GIF', append_images=images[1:],
                        save_all=True, duration=100, loop=0)
-    return goal
+    return goal, data_xyz[-1][3] == 1
 
 
-def scripted_grasp_v6(env, data_xyz, data_joint):
+def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds):
     env.move_to_neutral()
     time.sleep(1.0)
 
@@ -159,10 +159,14 @@ def scripted_grasp_v6(env, data_xyz, data_joint):
     print(goal)
     #goal[0] += np.random.uniform(low = -0.03, high = 0.03)
     #goal[1] += np.random.uniform(low = -0.03, high = 0.03)
-    goal[0] += np.random.normal(0, 0.012)
-    goal[1] += np.random.normal(0, 0.012)
+    goal[0] += np.random.normal(0, 0.01) + 0.01
+    if goal[0] > 0.3:
+        goal[0] += 0.01
+    if goal[1] < -0.14:
+        goal[1] -= 0.01
+    goal[1] += np.random.normal(0, 0.015)
 
-    goal[2] += np.random.uniform(low = 0.0, high = 0.03)
+    goal[2] += np.random.uniform(low = -0.012, high = 0.012)
 
     print("GOAL HEIGHT: ", goal[2])
     goal = np.clip(goal, env._safety_box.low, env._safety_box.high)
@@ -182,10 +186,10 @@ def scripted_grasp_v6(env, data_xyz, data_joint):
 
     gripper_closed = False
     for i in range(args.num_timesteps):
-        print(obs['observation'])
-        images.append(Image.fromarray(np.uint8(obs['render'])))
         print(i)
-        if np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])[:2]) > 0.06 \
+        print(obs['achieved_goal'][2], 'ASDASDA')
+        images.append(Image.fromarray(np.uint8(obs['render'])))
+        if np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])[:2]) > 0.1 \
             and not gripper_closed:
             diff = obs['desired_goal'] - obs['achieved_goal']
             diff[2] = 0.17 - obs['achieved_goal'][2]
@@ -194,7 +198,7 @@ def scripted_grasp_v6(env, data_xyz, data_joint):
             gripper = 0.7
             print('Moving to object')
         elif (abs(obs['desired_goal'][2] - obs['achieved_goal'][2]) > 0.01 \
-             or np.linalg.norm(obs['desired_goal'] - obs['achieved_goal']) > 0.06) \
+             or np.linalg.norm(obs['desired_goal'] - obs['achieved_goal']) > 0.1) \
              and not gripper_closed:
             diff = obs['desired_goal'] - obs['achieved_goal']
             diff *= 2
@@ -226,10 +230,11 @@ def scripted_grasp_v6(env, data_xyz, data_joint):
 
 
         diff = np.append(diff, [[wrist_diff * 3, gripper]])
-        diff = gym_replab.utils.add_noise(diff)
+        diff = gym_replab.utils.add_noise_custom(diff, noise_stds=noise_stds)
         diff = gym_replab.utils.clip_action(diff)
         print(diff)
         next_obs, reward, done, info = env.step(diff)
+        print("REWARD:", reward)
 
         if info['timeout']:
             env.open_gripper()
@@ -255,6 +260,8 @@ def augment_data_v6(data_xyz, data_joint):
         for i in range(len(data_xyz)):
             data_xyz[i][3] = 0
             data_joint[i][3] = 0
+
+    return object_grasped
 
 
 def store_trajectory(data_xyz, data_joint, params):
@@ -308,6 +315,20 @@ def store_trajectory(data_xyz, data_joint, params):
 
 
 def main(args):
+    if args.plot_grasp_locations:
+        plt = gym_replab.utils.plt
+        goals_success = [[], []]
+        goals_fail = [[], []]
+        plt.ion()
+        fig, ax = plt.subplots()
+        sc1 = ax.scatter(goals_success[1], goals_success[0], color='g')
+        sc2 = ax.scatter(goals_fail[1], goals_fail[0], color='r')
+        plt.xlim(-0.24, 0.16)
+        plt.ylim(0.14, 0.38)
+        plt.gca().invert_xaxis()
+        plt.draw()
+        plt.pause(0.1)
+
     for i in range(args.num_trajectories):
         #Make a new directory for each timestamp
         make_dirs()
@@ -316,12 +337,26 @@ def main(args):
         data_joint = []
 
         if args.env in V5_GRASPING_ENVS:
-            goal = scripted_grasp_v5(env, data_xyz, data_joint)
+            goal = scripted_grasp_v5(env, data_xyz, data_joint, args.noise_std)
         if args.env in V6_GRASPING_ENVS:
-            goal = scripted_grasp_v6(env, data_xyz, data_joint)
-            augment_data_v6(data_xyz, data_joint)
+            noise_stds = [args.noise_std*3]*6
+            noise_stds[4] = 0.1
+            noise_stds[2] /= 3
+            goal = scripted_grasp_v6(env, data_xyz, data_joint, noise_stds)
+            object_grasped = augment_data_v6(data_xyz, data_joint)
 
         if goal is not None:
+            if args.plot_grasp_locations:
+                if object_grasped:
+                    goals_success[0].append(goal[0])
+                    goals_success[1].append(goal[1])
+                else:
+                    goals_fail[0].append(goal[0])
+                    goals_fail[1].append(goal[1])
+                sc1.set_offsets(np.c_[goals_success[1], goals_success[0]])
+                sc2.set_offsets(np.c_[goals_fail[1], goals_fail[0]])
+                fig.canvas.draw_idle()
+                plt.pause(0.1)
             store_trajectory(data_xyz, data_joint, {'goal': goal})
 
 
@@ -331,12 +366,18 @@ if __name__ == '__main__':
                         choices=tuple(V5_GRASPING_ENVS + V6_GRASPING_ENVS),
                         required=True)
     parser.add_argument("-d", "--data_save_directory", type=str, default="WidowX200GraspV5ShortTest")
+    parser.add_argument("--noise_std", type=float, default=0.06)
     parser.add_argument("--num_trajectories", type=int, default=50000)
     parser.add_argument("--num_timesteps", type=int, default=15)
     parser.add_argument("--video_save_frequency", type=int,
                         default=1, help="Set to zero for no video saving")
+    parser.add_argument("--plot_grasp_locations", dest="plot_grasp_locations",
+                        action="store_true", default=False)
+
 
     args = parser.parse_args()
+    args.data_save_directory += "_noise_{}".format(args.noise_std)
+
     data_save_path = None
     video_save_path = None
 

@@ -2,7 +2,7 @@ import os
 import pickle as pkl
 import argparse
 
-
+parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--data_dir", type=str,
 default="""/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/
 gym_replab/data/WidowX200GraspV5""")
@@ -31,6 +31,7 @@ def count_successes():
                     #total += 1
                     if 'pool' in data_file and 'joint' in data_file:
                         #total += 1
+                        print(data_file)
                         s += is_successful(os.path.join(r1, data_file))
                         break
                 break

@@ -5,11 +5,14 @@ import numpy as np
 import argparse
 
 
+parser = argparse.ArgumentParser()
 parser.add_argument('-d','--data_dirs', nargs='+',
 default=["""/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/
 gym_replab/data/WidowX200GraspV5ShortControlledNewHeight"""])
 parser.add_argument('-s','--save_dir', default="""/home/jonathan/Desktop/Projects/
 WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspV5ShortCombined""")
+parser.add_argument("--success_only", dest="success_only",
+    action="store_true", default=False)
 args = parser.parse_args()
 
 data_dirs = args.data_dirs
@@ -50,7 +53,10 @@ def combine_data(data_dirs):
                     for data_file in f1:
                         if 'pool' in data_file and 'xyz' in data_file:
                             print(data_file)
-                            add_trajectory(os.path.join(r1, data_file))
+                            f = os.path.join(r1, data_file)
+                            if args.success_only and not is_successful(f):
+                                continue
+                            add_trajectory(f)
                     break
             break
 

@@ -4,16 +4,17 @@ import pickle
 import numpy as np
 import argparse
 
-
+parser = argparse.ArgumentParser()
 parser.add_argument("-f", "--file", type=str,
 default="""/home/jonathan/Desktop/Projects/WidowX200_RL/src/widowx200_rl/
 gym_replab/data/WidowX200GraspV5ShortCombined/combined_training_pool.pkl""")
+parser.add_argument("--use_obs_dict_replay_buffer", dest="use_obs_dict_replay_buffer",
+    action="store_true", default=False)
 args = parser.parse_args()
 
 file = args.file
 with open(file, 'rb') as f:
     data = pickle.load(f)
-
 
 new_data = dict()
 
@@ -53,5 +54,14 @@ data = dict(
     next_observations=next_observations,
     terminals=np.array(terminals).reshape(-1, 1),
 )
+
+'''
+if args.use_obs_dict_replay_buffer:
+    from railrl.data_management.obs_dict_replay_buffer import \
+        ObsDictReplayBuffer
+
+    replay_buffer = ObsDictReplayBuffer(int(2e6), )
+'''
+
 with open(file, 'wb') as f:
     pickle.dump(data, f)

@@ -25,8 +25,8 @@ class Widow200RealRobotBaseEnv(gym.Env):
         self.joint_space = spaces.Box(low=np.array([-0.6, -0.6, -0.6, -0.6, -0.6]),
                                        high=np.array([0.6, 0.6, 0.6, 0.6, 0.6]), dtype=np.float32)
 
-        self._safety_box = spaces.Box(low=np.array([0.12, -0.22, 0.052]),
-                                      high=np.array([0.38, 0.20, 0.2]), dtype=np.float32)
+        self._safety_box = spaces.Box(low=np.array([0.13, -0.26, 0.050]),
+                                      high=np.array([0.4, 0.16, 0.2]), dtype=np.float32)
 
         self.image_shape = (64, 64)
         self.observation_space = Dict({'state': spaces.Box(low=np.array([-3.0, -3.0, -3.0, -3.0, -3.0, -3.0]),
@@ -66,7 +66,7 @@ class Widow200RealRobotBaseEnv(gym.Env):
     def lift_object(self):
         lift_target = np.array([0.16, -0.04, self.reward_height_thresh + 0.04])
         moved = self.move_to_xyz(lift_target, wrist = self.current_pos[7], wait = 0.2)
-        return moved 
+        return moved
 
 
     def move_to_background_subtract(self):
@@ -105,8 +105,8 @@ class Widow200RealRobotBaseEnv(gym.Env):
             self.reset_publisher.publish("NO_GRIPPER")
             rospy.sleep(1.5)
         goal = np.array([0, 0, 0], dtype = 'float32')
-        goal[0] = np.random.uniform(low=0.20, high=0.32)
-        goal[1] = np.random.uniform(low=-0.17, high=0.11)
+        goal[0] = np.random.uniform(low=0.16, high=0.32)
+        goal[1] = np.random.uniform(low=-0.18, high=0.13)
         goal[2] = 0.14
         ik_command = self.ik._calculate_ik(goal, self.quat)[0][:5]
         while True:
