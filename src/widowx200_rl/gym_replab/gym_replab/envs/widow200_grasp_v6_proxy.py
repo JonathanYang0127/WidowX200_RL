@@ -15,11 +15,12 @@ import random
 REWARD_FAIL = 0.0
 REWARD_SUCCESS = 1.0
 
-class Widow200GraspV5ProxyEnv(gym.Env):
+
+class Widow200GraspV6ProxyEnv(gym.Env):
     def __init__(self, observation_mode='verbose', reward_type='sparse', grasp_detector='background_subtraction', transpose_image = False):
         #Normalized action space
-        self.action_space = spaces.Box(low=np.array([-1, -1, -1, -0.5, -1, 0]),
-                                       high=np.array([1, 1, 1, 0.5, 1, 1]), dtype=np.float32)
+        self.action_space = spaces.Box(low=np.array([-1, -1, -1, -0.5, -1]),
+                                       high=np.array([1, 1, 1, 0.5, 1]), dtype=np.float32)
 
         self.joint_space = spaces.Box(low=np.array([-0.5, -0.25, -0.25, -0.25, -0.5]),
                                        high=np.array([0.5, 0.25, 0.25, 0.25, 0.5]), dtype=np.float32)
@@ -86,5 +87,3 @@ class Widow200GraspV5ProxyEnv(gym.Env):
 
     def _start_rospy(self):
         raise NotImplementedError
-
-

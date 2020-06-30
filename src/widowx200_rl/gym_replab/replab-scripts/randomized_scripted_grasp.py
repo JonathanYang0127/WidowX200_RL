@@ -134,6 +134,7 @@ def scripted_grasp_v5(env, data_xyz, data_joint, noise_stds):
             env.open_gripper()
             break
 
+    make_dirs()
     images[0].save('{}/scripted_grasp.gif'.format(video_save_path),
                        format='GIF', append_images=images[1:],
                        save_all=True, duration=100, loop=0)
@@ -159,14 +160,18 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds):
     print(goal)
     #goal[0] += np.random.uniform(low = -0.03, high = 0.03)
     #goal[1] += np.random.uniform(low = -0.03, high = 0.03)
-    goal[0] += np.random.normal(0, 0.01) + 0.01
+    goal[0] += np.random.normal(0, 0.01)
     if goal[0] > 0.3:
         goal[0] += 0.01
+    if goal[0] > 0.2:
+        goal[0] -= 0.01
     if goal[1] < -0.14:
         goal[1] -= 0.01
+    if goal[1] > 0.1:
+        goal[1] += 0.01
     goal[1] += np.random.normal(0, 0.015)
 
-    goal[2] += np.random.uniform(low = -0.012, high = 0.012)
+    goal[2] += np.random.uniform(low = -0.005, high = 0.005)
 
     print("GOAL HEIGHT: ", goal[2])
     goal = np.clip(goal, env._safety_box.low, env._safety_box.high)
@@ -198,7 +203,7 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds):
             gripper = 0.7
             print('Moving to object')
         elif (abs(obs['desired_goal'][2] - obs['achieved_goal'][2]) > 0.01 \
-             or np.linalg.norm(obs['desired_goal'] - obs['achieved_goal']) > 0.1) \
+             or np.linalg.norm(obs['desired_goal'] - obs['achieved_goal']) > 0.09) \
              and not gripper_closed:
             diff = obs['desired_goal'] - obs['achieved_goal']
             diff *= 2
@@ -248,6 +253,7 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds):
             env.open_gripper()
             break
 
+    make_dirs()
     images[0].save('{}/scripted_grasp.gif'.format(video_save_path),
                        format='GIF', append_images=images[1:],
                        save_all=True, duration=100, loop=0)
@@ -255,6 +261,8 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds):
 
 
 def augment_data_v6(data_xyz, data_joint):
+    if len(data_xyz) == 0:
+        return False
     object_grasped = env.check_if_object_grasped()
     if not object_grasped:
         for i in range(len(data_xyz)):
@@ -331,7 +339,7 @@ def main(args):
 
     for i in range(args.num_trajectories):
         #Make a new directory for each timestamp
-        make_dirs()
+        #make_dirs()
 
         data_xyz = []
         data_joint = []
