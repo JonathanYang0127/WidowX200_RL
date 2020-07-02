@@ -16,11 +16,11 @@ If this works, then there should be a GUI with 4 split screens showing different
 Next, to get the Kinect working with ROS, clone iai_kinect to into src:
 https://github.com/code-iai/iai_kinect2
 
-###Setting up the USB camera
+### Setting up the USB camera
 Clone the video_stream_opencv repository into WidowX200_RL/src:
 https://github.com/ros-drivers/video_stream_opencv
 
-###Setting up the Interbotix Commander
+### Setting up the Interbotix Commander
 Clone the Interbotix ROS Arms repository into WidowX200_RL/src:
 https://github.com/Interbotix/interbotix_ros_arms
 
