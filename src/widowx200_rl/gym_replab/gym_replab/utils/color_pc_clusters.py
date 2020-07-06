@@ -16,7 +16,7 @@ from sklearn.cluster import dbscan
 # New Widow200 Settings
 TRAY_CENTER = np.array([0.035, 0.18, 0.77])
 margin = 0.005
-TRAY_LOWERBOUND = np.array([-0.18, -0.1,  0.59]) + np.array([margin, margin, 0])
+TRAY_LOWERBOUND = np.array([-0.18, -0.09,  0.59]) + np.array([margin, margin, 0])
 # --Teddy in the corner: [-0.13604932, -0.07284055,  0.8274319]
 TRAY_UPPERBOUND = np.array([0.24, 0.28, 0.86]) - np.array([margin, margin, 0])
 PC_TO_ROBOT_TRANSMATRIX = [[-0.00364816, -0.96700644,  0.00380231],

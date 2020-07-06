@@ -1,5 +1,4 @@
-gym==0.12.1
-numpy==1.16.0
-pyyaml
-rospkg
-
+rospkg==1.2.8
+python-pcl==0.3.0a1
+numpy==1.18.4
+scikit-image==0.14.2

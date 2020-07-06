@@ -160,18 +160,22 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds):
     print(goal)
     #goal[0] += np.random.uniform(low = -0.03, high = 0.03)
     #goal[1] += np.random.uniform(low = -0.03, high = 0.03)
-    goal[0] += np.random.normal(0, 0.01)
+
+    goal[0] += np.random.normal(0, 0.005) - 0.01 #0.01
     if goal[0] > 0.3:
-        goal[0] += 0.01
-    if goal[0] > 0.2:
+        goal[0] += 0.005
+    if goal[0] < 0.22:
         goal[0] -= 0.01
-    if goal[1] < -0.14:
-        goal[1] -= 0.01
-    if goal[1] > 0.1:
-        goal[1] += 0.01
-    goal[1] += np.random.normal(0, 0.015)
+    if goal[1] < -0.03:
+        goal[1] -= 0.02
+    if goal[1] < -0.17:
+        goal[1] -= 0.02
+    if goal[1] > 0.04:
+        goal[1] += 0.02
+    goal[1] += np.random.normal(0, 0.005) #0.015
 
     goal[2] += np.random.uniform(low = -0.005, high = 0.005)
+
 
     print("GOAL HEIGHT: ", goal[2])
     goal = np.clip(goal, env._safety_box.low, env._safety_box.high)
@@ -194,7 +198,7 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds):
         print(i)
         print(obs['achieved_goal'][2], 'ASDASDA')
         images.append(Image.fromarray(np.uint8(obs['render'])))
-        if np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])[:2]) > 0.1 \
+        if np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])[:2]) > 0.09 \
             and not gripper_closed:
             diff = obs['desired_goal'] - obs['achieved_goal']
             diff[2] = 0.17 - obs['achieved_goal'][2]
@@ -203,7 +207,7 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds):
             gripper = 0.7
             print('Moving to object')
         elif (abs(obs['desired_goal'][2] - obs['achieved_goal'][2]) > 0.01 \
-             or np.linalg.norm(obs['desired_goal'] - obs['achieved_goal']) > 0.09) \
+             or np.linalg.norm(obs['desired_goal'] - obs['achieved_goal']) > 0.08) \
              and not gripper_closed:
             diff = obs['desired_goal'] - obs['achieved_goal']
             diff *= 2
