@@ -9,8 +9,8 @@ https://github.com/OpenKinect/libfreenect2
 
 To test that the Kinect is working try the following commands:
 ```bash
-cd libfreenect2
-./build/bin/Protonect
+$ cd libfreenect2
+$ ./build/bin/Protonect
 ```
 If this works, then there should be a GUI with 4 split screens showing different camera readings.
 Next, to get the Kinect working with ROS, clone iai_kinect to into src:
@@ -26,15 +26,21 @@ https://github.com/Interbotix/interbotix_ros_arms
 
 Then, to install its dependencies, run
 ```bash
-pip install modern_robotics
-rosdep update
-rosdep install --from-paths src --ignore-src -r -y
+$ pip install modern_robotics
+$ rosdep update
+$ rosdep install --from-paths src --ignore-src -r -y
+```
+
+To make the computer recognize the U2D2 controller, run
+```bash
+$ sudo cp ~/interbotix_ws/src/interbotix_ros_arms/interbotix_sdk/10-interbotix-udev.rules /etc/udev/rules.d
+$ sudo udevadm control --reload-rules && udevadm trigger
 ```
 
 ### Building the Workspace
 After finishing the above steps, run
 ```bash
-catkin_make
+$ catkin_make
 ```
 
 ## Connecting to the WidowX200
@@ -63,11 +69,11 @@ This package contains the reinforcement learning environments and a joint subscr
 Make sure you have at least 5 command prompt panes available. In each pane, run source devel/setup.bash.
 Then, run the following commands:
 ```bash
-sh start.sh
-roslaunch kinect2_bridge kinect_2 bridge.launch
-sh start_webcam_server.sh
-rosrun widowx200_rl widowx200_joint_subscriber.py
-rosrun widowx200_core gripper_monitor.py
+$ sh start.sh
+$ roslaunch kinect2_bridge kinect_2 bridge.launch
+$ sh start_webcam_server.sh
+$ rosrun widowx200_rl widowx200_joint_subscriber.py
+$ rosrun widowx200_core gripper_monitor.py
 ```
 
 ### Callibrating the Kinect
