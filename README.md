@@ -24,6 +24,14 @@ https://github.com/ros-drivers/video_stream_opencv
 Clone the Interbotix ROS Arms repository into WidowX200_RL/src:
 https://github.com/Interbotix/interbotix_ros_arms
 
+Then, to install its dependencies, run
+```bash
+pip install modern_robotics
+rosdep update
+rosdep install --from-paths src --ignore-src -r -y
+```
+
+### Building the Workspace
 After finishing the above steps, run
 ```bash
 catkin_make
