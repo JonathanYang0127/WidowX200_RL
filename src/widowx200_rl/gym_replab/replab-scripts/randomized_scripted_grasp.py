@@ -254,9 +254,16 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, save_video, policy=
                 gripper = -0.7
                 print('Done!')
 
-            diff = np.append(diff, [[wrist_diff * 3, gripper]])
-            diff = gym_replab.utils.add_noise_custom(diff, noise_stds=noise_stds)
-            action = gym_replab.utils.clip_action(diff)
+            action = np.append(diff, [[wrist_diff * 3, gripper]])
+
+
+        action = gym_replab.utils.add_noise_custom(action, noise_stds=noise_stds)
+        action = gym_replab.utils.clip_action(action)
+
+        if action[4] < -0.5:
+            gripper_closed = True
+        elif action[4] > 0.5:
+            gripper_closed = False
 
         next_obs, reward, done, info = env.step(action)
         print("REWARD:", reward)
@@ -265,8 +272,6 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, save_video, policy=
             env.open_gripper()
             return None
 
-        if action[4] == -0.7:
-            gripper_closed = True
         data_xyz.append([obs, action, next_obs, reward, done])
         data_joint.append([obs, info['joint_command'], next_obs, reward, done])
         obs = next_obs
