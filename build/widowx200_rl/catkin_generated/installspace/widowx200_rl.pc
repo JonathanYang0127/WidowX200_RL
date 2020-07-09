@@ -1,8 +1,0 @@
-prefix=/home/jonathan/Desktop/Projects/WidowX200_RL/install
-
-Name: widowx200_rl
-Description: Description of widowx200_rl
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 

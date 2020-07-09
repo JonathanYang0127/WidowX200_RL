@@ -13,6 +13,9 @@ parser.add_argument('-s','--save_dir', default="""/home/jonathan/Desktop/Project
 WidowX200_RL/src/widowx200_rl/gym_replab/data/WidowX200GraspV5ShortCombined""")
 parser.add_argument("--success_only", dest="success_only",
     action="store_true", default=False)
+parser.add_argument("--append_initial_image", dest="append_initial_image",
+    action="store_true", default=False)
+parser.add_argument("--batch_size", type=int, default=-1)
 args = parser.parse_args()
 
 data_dirs = args.data_dirs
@@ -21,6 +24,7 @@ training_pool = gym_replab.utils.DemoPool()
 validation_pool = gym_replab.utils.DemoPool()
 counter = 0
 TRAINING_FREQUENCY = 1.0
+buffer_number = 0
 
 
 def is_successful(data_file):
@@ -35,9 +39,13 @@ def add_trajectory(data_file):
         data = pkl.load(fp)
 
     pool_type = np.random.rand()
+    initial_obs = data['observations'][0][0]['image']
     for arr_obs, arr_action, arr_nobs, arr_reward, arr_done in zip(data['observations'], data['actions'], \
         data['next_observations'], data['rewards'], data['terminals']):
         obs, action, nobs, reward, done = arr_obs[0], arr_action, arr_nobs[0], arr_reward[0], arr_done[0]
+        if args.append_initial_image:
+            obs['image'] = np.append(obs['image'], initial_obs, axis=0)
+            nobs['image'] = np.append(nobs['image'], initial_obs, axis=0)
         if pool_type < TRAINING_FREQUENCY:
             training_pool.add_sample(obs, action, nobs, reward, done)
         else:
@@ -46,6 +54,13 @@ def add_trajectory(data_file):
         counter += 1
 
 def combine_data(data_dirs):
+    global training_pool, buffer_number
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    else:
+        os.system('rm -rf {}'.format(save_dir))
+        os.makedirs(save_dir)
+    counter = 0
     for data_dir in data_dirs:
         for root, dirs, files in os.walk(data_dir):
             for d in dirs:
@@ -56,19 +71,19 @@ def combine_data(data_dirs):
                             f = os.path.join(r1, data_file)
                             if args.success_only and not is_successful(f):
                                 continue
+                            counter += 1
+                            if counter == args.batch_size:
+                                counter = 0
+                                training_pool.save(['s'], save_dir,
+                                    'combined_training_pool_{}.pkl'.format(buffer_number))
+                                buffer_number += 1
+                                training_pool = gym_replab.utils.DemoPool()
+                                #validation_pools.append(gym_replab.utils.DemoPool())
                             add_trajectory(f)
                     break
             break
 
 
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-    else:
-        os.system('rm -rf {}'.format(save_dir))
-        os.makedirs(save_dir)
-
-    training_pool.save(['s'], save_dir,
-        'combined_training_pool.pkl')
     #validation_pool.save(['s'], save_dir,
     #    'combined_validation_pool.pkl')
     print(counter)

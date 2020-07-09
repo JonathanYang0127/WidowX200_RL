@@ -1,8 +1,0 @@
-prefix=/home/jonathan/Desktop/Projects/WidowX200_RL/install
-
-Name: widowx200_core
-Description: Description of widowx200_core
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 

@@ -14,16 +14,22 @@ from sklearn.cluster import dbscan
 # TRAY_UPPERBOUND = np.array([0.2334, 0.1443, 0.7494]) - np.array([margin, margin, 0])
 
 # New Widow200 Settings
-TRAY_CENTER = np.array([0.035, 0.18, 0.77])
+TRAY_CENTER = np.array([0.02, 0.18, 0.77]) 
 margin = 0.005
-TRAY_LOWERBOUND = np.array([-0.18, -0.09,  0.59]) + np.array([margin, margin, 0])
+TRAY_LOWERBOUND = np.array([-0.17, -0.1,  0.59]) + np.array([margin, margin, 0])
 # --Teddy in the corner: [-0.13604932, -0.07284055,  0.8274319]
-TRAY_UPPERBOUND = np.array([0.24, 0.28, 0.86]) - np.array([margin, margin, 0])
-PC_TO_ROBOT_TRANSMATRIX = [[-0.00364816, -0.96700644,  0.00380231],
+TRAY_UPPERBOUND = np.array([0.22, 0.275, 0.86]) - np.array([margin, margin, 0])
+PC_TO_ROBOT_TRANSMATRIX = [[-0.11803748, -1.0756437,   0.02674635],
+ [ 1.2593696,   0.38307208, -0.48107222],
+ [ 2.3238664,   0.20299676, -0.43830335],
+ [-1.6489465,  -0.24763337,  0.47699887]]
+
+'''
+[[-0.00364816, -0.96700644,  0.00380231],
  [ 0.0269354,   0.3353208,   0.45923522],
  [ 1.376613,    0.2014772,   0.28252834],
  [-0.71747684, -0.21570125, -0.2260614 ]]
-
+'''
 '''
 [[ 0.00339824, -0.9717597,  -0.0024819 ],
  [-0.18946469, -1.4484594,  0.55130017],

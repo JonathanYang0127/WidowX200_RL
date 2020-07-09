@@ -1,8 +1,0 @@
-prefix=/home/jonathan/Desktop/Projects/WidowX200_RL/install
-
-Name: interbotix_diagnostic_tool
-Description: Description of interbotix_diagnostic_tool
-Version: 0.0.0
-Cflags: -I${prefix}/include
-Libs: -L${prefix}/lib 
-Requires: interbotix_sdk message_generation rosbag roscpp rospy rqt_plot sensor_msgs
