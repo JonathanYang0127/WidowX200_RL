@@ -158,13 +158,13 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, save_video, policy=
             sys.exit(0)
 
     goal, object_vector = pc_data
-    goal = np.append(goal, 0.052)
+    goal = np.append(goal, 0.05)
     print(goal)
     #goal[0] += np.random.uniform(low = -0.03, high = 0.03)
     #goal[1] += np.random.uniform(low = -0.03, high = 0.03)
 
     goal[0] += np.random.normal(0, 0.005)#0.01
-    if goal[0] > 0.26:
+    if goal[0] > 0.3:
         goal[0] += 0.01
     if goal[0] < 0.22:
         goal[0] -= 0.01
@@ -255,9 +255,9 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, save_video, policy=
                 print('Done!')
 
             action = np.append(diff, [[wrist_diff * 3, gripper]])
+            action = gym_replab.utils.add_noise_custom(action, noise_stds=noise_stds)
 
 
-        action = gym_replab.utils.add_noise_custom(action, noise_stds=noise_stds)
         action = gym_replab.utils.clip_action(action)
 
         if action[4] < -0.5:
