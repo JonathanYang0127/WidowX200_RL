@@ -54,7 +54,7 @@ def add_trajectory(data_file):
         counter += 1
 
 def combine_data(data_dirs):
-    global training_pool, buffer_number
+    global training_pool, buffer
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     else:
@@ -83,9 +83,11 @@ def combine_data(data_dirs):
                     break
             break
 
-
-    #validation_pool.save(['s'], save_dir,
-    #    'combined_validation_pool.pkl')
+    if args.batch_size == -1:
+        training_pool.save(['s'], save_dir,
+            'combined_training_pool.pkl')
+        #validation_pool.save(['s'], save_dir,
+            #'combined_validation_pool.pkl')
     print(counter)
 
 
