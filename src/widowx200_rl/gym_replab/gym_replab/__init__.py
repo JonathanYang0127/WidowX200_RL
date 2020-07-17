@@ -23,6 +23,10 @@ register(id='Widow200RealRobotGraspV6-v0',
          entry_point='gym_replab.envs:Widow200RealRobotGraspV6Env',
          )
 
+register(id='Widow200RealRobotGraspV7-v0',
+         entry_point='gym_replab.envs:Widow200RealRobotGraspV7Env',
+         )
+
 register(id='Widow200GraspV5-v0',
          entry_point='gym_replab.envs:Widow200GraspV5ProxyEnv',
          )
