@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import pcl
 import numpy as np
 from sklearn.cluster import dbscan
+from sklearn.preprocessing import PolynomialFeatures
 
 # Old Replab Settings
 # TRAY_CENTER = np.array([0.05, 0.05, 0.7]) # calibrate this everytime the camera is moved
@@ -14,15 +15,22 @@ from sklearn.cluster import dbscan
 # TRAY_UPPERBOUND = np.array([0.2334, 0.1443, 0.7494]) - np.array([margin, margin, 0])
 
 # New Widow200 Settings
-TRAY_CENTER = np.array([0.02, 0.18, 0.77]) 
+TRAY_CENTER = np.array([0.02, 0.18, 0.77])
 margin = 0.005
-TRAY_LOWERBOUND = np.array([-0.17, -0.1,  0.59]) + np.array([margin, margin, 0])
+TRAY_LOWERBOUND = np.array([-0.19, -0.1,  0.59]) + np.array([margin, margin, 0])
 # --Teddy in the corner: [-0.13604932, -0.07284055,  0.8274319]
-TRAY_UPPERBOUND = np.array([0.22, 0.275, 0.86]) - np.array([margin, margin, 0])
-PC_TO_ROBOT_TRANSMATRIX = [[-0.11803748, -1.0756437,   0.02674635],
+TRAY_UPPERBOUND = np.array([0.22, 0.31, 0.86]) - np.array([margin, margin, 0])
+PC_TO_ROBOT_TRANSMATRIX = [[ 6.2220745e-02, -1.0432544e+00, -9.5002441e-04],
+ [-2.7337086e+00,  2.7119657e-01,  7.8111604e-02],
+ [-7.0713878e-01,  1.3135403e-01, -2.0416109e-02],
+ [ 1.4393997e+00, -1.8161449e-01,  6.0761295e-02]]
+
+'''
+[[-0.11803748, -1.0756437,   0.02674635],
  [ 1.2593696,   0.38307208, -0.48107222],
  [ 2.3238664,   0.20299676, -0.43830335],
  [-1.6489465,  -0.24763337,  0.47699887]]
+'''
 
 '''
 [[-0.00364816, -0.96700644,  0.00380231],
@@ -53,7 +61,7 @@ PC_TO_ROBOT_TRANSMATRIX = [[-0.11803748, -1.0756437,   0.02674635],
 
 
 PCD_IN = "pc0.pcd"
-VERBOSE = True
+VERBOSE = False
 
 # Old transformation matrix
 # np.array([
@@ -74,6 +82,7 @@ def filter_pcd_to_pc_array(pcd_in):
     LOW_DIST_THRESH = 0.65 # 0.6
     HIGH_DIST_THRESH = 0.85 # 0.83
     TRAY_RADIUS = 0.24 # 0.24
+    PT_FILTER_UPPERBOUND = np.array([np.inf, 0.32, np.inf])
     pc_in = pcl.load_XYZRGB(pcd_in) # load input point cloud
     pc_in_array = np.asarray(pc_in)
     pc_out_array = pc_in_array.copy()
@@ -82,7 +91,8 @@ def filter_pcd_to_pc_array(pcd_in):
         pt = pc_out_array[i]
         pt_dist = np.linalg.norm(pt[:3])
         tray_center_pt_dist = np.linalg.norm(pt[:3] - TRAY_CENTER)
-        if tray_center_pt_dist < TRAY_RADIUS and (pt_dist > LOW_DIST_THRESH and pt_dist < HIGH_DIST_THRESH):
+        if (tray_center_pt_dist < TRAY_RADIUS and (pt_dist > LOW_DIST_THRESH \
+          and pt_dist < HIGH_DIST_THRESH) and (pt[:3] < PT_FILTER_UPPERBOUND).all()):
             tray_pts_indices.append(i)
             # pt[3] = 0xffff00 # R,G,B = FF, 00, 00
         else:
@@ -145,7 +155,7 @@ def cluster_pc_array(pc_array, pc_to_robot_transmatrix=PC_TO_ROBOT_TRANSMATRIX):
     # Plot the center of the tray
     cc_i_x, cc_i_y, cc_i_z = TRAY_CENTER
     pc_array = np.concatenate((pc_array, random_points_array_at(cc_i_x, cc_i_y, cc_i_z, colors[-1], num_points=1000)), axis=0).astype(np.float32)
-    # if VERBOSE: print("clusters", clusters)
+    if VERBOSE: print("clusters", clusters)
     return pc_array, clusters
 
 def get_pc_cluster_center(pcd_in=PCD_IN):
@@ -190,13 +200,13 @@ def pc_to_robot_coords(pc_coords, pc_to_robot_transmatrix=PC_TO_ROBOT_TRANSMATRI
     # add vector of 1s as feature to the pc_coords.
     if VERBOSE: print("pc_coords.shape", pc_coords.shape)
     if len(pc_coords.shape) == 1:
-        pc_coords = np.array(list(pc_coords) + [1])
-    elif len(pc_coords.shape) == 2:
-        pc_coords = np.concatenate((pc_coords, np.ones((pc_coords.shape[0], 1))), axis=-1)
-    else:
+        pc_coords = np.array([list(pc_coords)])
+    elif len(pc_coords.shape) != 2:
         raise NotImplementedError("pc_to_robot_coords(...) unsupported for shape {}".format(pc_coords.shape))
     # print("pc_to_robot_coords(): using pc_to_robot_transmatrix:")
     # print(pc_to_robot_transmatrix)
+    poly = PolynomialFeatures(1)
+    pc_coords = poly.fit_transform(pc_coords)
     robot_coords = pc_coords @ pc_to_robot_transmatrix
     # print(robot_coords)
     return robot_coords

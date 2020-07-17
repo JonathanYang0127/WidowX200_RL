@@ -1,4 +1,6 @@
 from .color_pc_clusters import *
+from .webcam_client import get_image
+from .rgb_location_detection import get_rgb_centroids, rgb_to_robot_coords
 import os
 import datetime
 import numpy as np
@@ -76,6 +78,11 @@ def get_center_and_second_pc(kinect_image_service):
         return compute_center_and_pc()
     except:
         return None
+
+def get_random_center_rgb(image0, num_objects=1):
+    image1 = get_image(512, 512)[150:]
+    centroids = get_rgb_centroids(image0, image1, num_objects)
+    return rgb_to_robot_coords(centroids)[np.random.choice(num_objects)]
 
 def get_pc_object_center(kinect_image_service):
     kinect_image_service.pull_image()

@@ -27,15 +27,9 @@ b = np.array([
 [0.00035398186, 0.0037719081, 0.42250609]
 ])
 
-def compute_pc_to_robot_transformation(a, b):
-    lr = LinearRegression().fit(a,b)
-    print("training error per point per dimension: ", (a @ lr.coef_.T + lr.intercept_) - b)
-    print("residual norm", np.linalg.norm((a @ lr.coef_.T + lr.intercept_) - b))
-    d = np.concatenate((lr.coef_.T, np.expand_dims(lr.intercept_, axis=0)), axis=0)
-    pc_coords = np.concatenate((a, np.ones((a.shape[0], 1))), axis=1)
-    print('Transformation Matrix: ')
-    print(d)
-    return d
+def compute_robot_transformation_matrix(a, b):
+    lr = LinearRegression(fit_intercept=False).fit(a,b)
+    return lr.coef_.T
 
 if __name__ == '__main__':
     # Point Cloud coordinates
@@ -64,4 +58,4 @@ if __name__ == '__main__':
     [0.00035398186, 0.0037719081, 0.42250609]
     ])
 
-    compute_pc_to_robot_transformation(a, b)
+    compute_robot_transformation_matrix(a, b)

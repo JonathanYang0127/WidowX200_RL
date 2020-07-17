@@ -5,9 +5,12 @@ import cv2
 sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 import numpy as np
 from scipy.cluster.vq import vq, kmeans, whiten
+from gym_replab.utils import background_subtraction
 
 
-img = cv2.imread("/home/jonathan/rgbdiff.png", cv2.IMREAD_GRAYSCALE)
+image1 = cv2.imread("/home/jonathan/Desktop/Projects/image1.png")
+image0 = cv2.imread("/home/jonathan/Desktop/image0.png")
+
 
 def downsample_average(image, num_pixels=4):
     new_image = np.copy(image)
@@ -19,8 +22,8 @@ def downsample_average(image, num_pixels=4):
                 j-num_pixels:j+num_pixels])
 
     cv2.imshow("Averaged", new_image)
-    cv2.waitKey(0)
     return new_image
+
 
 def extract_points(image, stride=4, threshold=50):
     height, width = image.shape
@@ -34,7 +37,6 @@ def extract_points(image, stride=4, threshold=50):
                 new_image = cv2.circle(new_image, (j, i), radius=1, color=(0, 0, 255), thickness=1)
                 points.append([i, j])
     cv2.imshow("Extracted points", new_image)
-    cv2.waitKey(0)
     return np.array(points, dtype='float')
 
 
@@ -42,16 +44,21 @@ def k_means(points, num_objects):
     centroids, _ = kmeans(points, num_objects)
     return centroids
 
+
 def plot_centroids(image, centroids):
     new_image = cv2.cvtColor(image,cv2.COLOR_GRAY2RGB)
     for centroid in centroids:
         new_image = cv2.circle(new_image, (int(centroid[1]), int(centroid[0])), radius=1, color=(0, 0, 255), thickness=1)
 
     cv2.imshow("Centroids", new_image)
-    cv2.waitKey(0)
 
 
+img, canvas = background_subtraction(image0, image1, False)
+cv2.imshow("Images", np.hstack((image0, image1, img)))
+img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+print(img.shape)
 img = downsample_average(img)
-points = extract_points(img)
+points = extract_points(img, 4, 50)
 centroids = k_means(points, 1)
 plot_centroids(img, centroids)
+cv2.waitKey(0)
