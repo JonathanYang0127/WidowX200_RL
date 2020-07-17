@@ -118,7 +118,7 @@ class Widow200RealRobotBaseEnv(gym.Env):
             goal[1] = np.random.uniform(low=goals_1[tmp[1]][0], high=goals_1[tmp[1]][1])
         '''
         goal[0] = np.random.uniform(low=0.16, high=0.34)
-        goal[1] = np.random.uniform(low=-0.22, high=0.15) #(-0.18, 0.13)
+        goal[1] = np.random.uniform(low=-0.22, high=0.14) #(-0.18, 0.13)
 
         goal[2] = 0.14
         ik_command = self.ik._calculate_ik(goal, self.quat)[0][:5]
