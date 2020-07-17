@@ -81,8 +81,11 @@ def get_center_and_second_pc(kinect_image_service):
 
 def get_random_center_rgb(image0, num_objects=1):
     image1 = get_image(512, 512)[150:]
-    centroids = get_rgb_centroids(image0, image1, num_objects)
-    return rgb_to_robot_coords(centroids)[np.random.choice(num_objects)]
+    try:
+        centroids = get_rgb_centroids(image0, image1, num_objects)
+        return rgb_to_robot_coords(centroids)[np.random.choice(num_objects)]
+    except:
+        return None
 
 def get_pc_object_center(kinect_image_service):
     kinect_image_service.pull_image()

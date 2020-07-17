@@ -24,7 +24,7 @@ array([ 0.16896546, -0.17180271], dtype=float32),
 array([ 0.2618817 , -0.16135776], dtype=float32),
 array([ 0.30938584, -0.16271168], dtype=float32)])
 
-poly = PolynomialFeatures(1)
+poly = PolynomialFeatures(2)
 temp = poly.fit_transform(rgb_coords)
 print(temp.shape)
 matrix = gym_replab.utils.compute_robot_transformation_matrix(np.array(temp), np.array(robot_coords))

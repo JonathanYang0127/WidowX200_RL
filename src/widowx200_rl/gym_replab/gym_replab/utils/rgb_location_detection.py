@@ -9,12 +9,18 @@ from .background_subtraction import background_subtraction
 import os
 from sklearn.preprocessing import PolynomialFeatures
 
+'''
 RGB_TO_ROBOT_TRANSMATRIX = [[ 1.31473611e-01, -2.80861098e-01],
  [ 1.28848446e-03,  4.03900671e-06],
  [-1.46187436e-05,  9.14655889e-04]]
+'''
 
-image1 = cv2.imread("/home/jonathan/Desktop/Projects/image1.png")
-image0 = cv2.imread("/home/jonathan/Desktop/image0.png")
+RGB_TO_ROBOT_TRANSMATRIX = [[ 1.07112906e-01, -3.37877220e-01],
+ [ 2.18106984e-03,  5.81023424e-04],
+ [-5.17897443e-05,  1.15085881e-03],
+ [-5.18807412e-06, -6.94702605e-07],
+ [ 1.08736536e-07, -1.58696406e-06],
+ [ 5.42560104e-08, -1.46107167e-07]]
 
 
 def downsample_average(image, num_pixels=4, save_dir=""):
@@ -76,7 +82,7 @@ def get_rgb_centroids(image0, image1, num_centroids=1, save_dir=""):
 def rgb_to_robot_coords(rgb_coords, transmatrix=RGB_TO_ROBOT_TRANSMATRIX):
     # add vector of 1s as feature to the pc_coords.
     assert len(rgb_coords.shape) == 2
-    poly = PolynomialFeatures(1)
+    poly = PolynomialFeatures(2)
     rgb_coords = poly.fit_transform(rgb_coords)
 
     robot_coords = rgb_coords @ transmatrix
