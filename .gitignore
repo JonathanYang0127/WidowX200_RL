@@ -4,6 +4,7 @@ src/interbotix_ros_arms
 src/video_stream_opencv
 src/iai_kinect2
 *.png
+*.jpg
 *.pcd
 devel/
 build/
