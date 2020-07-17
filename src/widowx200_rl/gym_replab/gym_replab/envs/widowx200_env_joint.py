@@ -26,8 +26,6 @@ class WidowX200EnvJoint(gym.Env):
         self.goal = None          #CHANGE
         self.use_rgb = use_rgb
 
-        if self.use_rgb:
-            self._image_puller = utils.USBImagePuller()
 
 
     def set_goal(self, goal):
@@ -86,7 +84,7 @@ class WidowX200EnvJoint(gym.Env):
             obs['gripper'] = self.current_pos[8]
 
         if self.use_rgb:
-            obs['image'] = utils.process_image_rgb(self._image_puller.pull_image(), 64, 64)
+            obs['image'] = utils.get_image(64, 64   )
         #np.append(self._get_rgb(), self.original_image, axis=2)
         obs['state'] =  self.current_pos[3:9]
         return obs
