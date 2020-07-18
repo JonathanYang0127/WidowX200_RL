@@ -8,3 +8,4 @@ from gym_replab.envs.widow200_grasp_v6 import Widow200RealRobotGraspV6Env
 from gym_replab.envs.widow200_grasp_v7 import Widow200RealRobotGraspV7Env
 from gym_replab.envs.widow200_grasp_v5_proxy import Widow200GraspV5ProxyEnv
 from gym_replab.envs.widow200_grasp_v6_proxy import Widow200GraspV6ProxyEnv
+from gym_replab.envs.widow200_drawer import Widow200DrawerEnv
