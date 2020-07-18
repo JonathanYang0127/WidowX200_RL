@@ -39,12 +39,13 @@ class Widow200RealRobotGraspV7Env(Widow200RealRobotBaseEnv):
         self._gripper_closed = -0.3
         self._gripper_open = 0.6
         self.reward_height_thresh = 0.14
-
+        
 
     def _set_action_space(self):
         #Normalized action space
         self.action_space = spaces.Box(low=np.array([-1, -1, -1, -1, -1]),
                                        high=np.array([1, 1, 1, 1, 1]), dtype=np.float32)
+
 
     def check_if_object_grasped(self):
         if self._grasp_detector == 'background_subtraction':
@@ -60,7 +61,8 @@ class Widow200RealRobotGraspV7Env(Widow200RealRobotBaseEnv):
             rospy.sleep(1.0)
             image1 = utils.get_image(512, 512)[150:]
             rospy.sleep(0.5)
-            object_grasped = utils.grasp_success_blob_detector(image0, image1, True)
+            object_grasped = utils.grasp_success_blob_detector(image0, image1, \
+                self.image_save_dir != "", self.image_save_dir)
             if object_grasped:
                 print("****************Object Grasp Succeeded!!!******************")
                 return True

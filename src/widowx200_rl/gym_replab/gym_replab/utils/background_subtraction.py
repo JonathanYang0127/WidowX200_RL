@@ -21,9 +21,7 @@ MAX_BYTE_VAL = 255
 def get_curr_image(rgb_image_service):
     return gym_replab.utils.get_rgb_image(rgb_image_service)
 
-def background_subtraction(image0, image1, save_image=False):
-    cv2.imwrite("/home/jonathan/Desktop/Projects/image0.png", image0)
-    cv2.imwrite("/home/jonathan/Desktop/Projects/image1.png", image1)
+def background_subtraction(image0, image1, save_image=False, save_path=""):
     diff = cv2.absdiff(image1, image0)
     print(diff.shape)
     mask = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
@@ -38,8 +36,10 @@ def background_subtraction(image0, image1, save_image=False):
     print("canvas", canvas)
 
     if save_image:
-        cv2.imwrite("/home/jonathan/Desktop/Projects/rgbdiff.png", diff)
-        cv2.imwrite("/home/jonathan/Desktop/Projects/diff.png", canvas)
+        cv2.imwrite(save_path + "/image0.png", image0)
+        cv2.imwrite(save_path + "/image1.png", image1)
+        cv2.imwrite(save_path + "/rgbdiff.png", diff)
+        cv2.imwrite(save_path + "/diff.png", canvas)
     return diff, canvas
 
 def is_object_missing(canvas):
@@ -90,8 +90,8 @@ def apply_blob_detection(img, save_image = False):
     return len(keypoints) == 1
 
 
-def grasp_success_blob_detector(image0, image1, save_image=False):
-    diff, canvas = background_subtraction(image0, image1, save_image)
+def grasp_success_blob_detector(image0, image1, save_image=False, save_path=""):
+    diff, canvas = background_subtraction(image0, image1, save_image, save_path)
     return apply_blob_detection(diff, save_image)
 
 

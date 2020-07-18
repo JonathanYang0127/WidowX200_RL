@@ -332,11 +332,11 @@ def scripted_grasp_v7(env, data_xyz, data_joint, noise_stds, detection_mode, ima
     #goal[0] += np.random.uniform(low = -0.03, high = 0.03)
     #goal[1] += np.random.uniform(low = -0.03, high = 0.03)
 
-    goal[0] += np.random.normal(0, 0.005)#0.01
+    goal[0] += np.random.normal(0, 0.005) 
     if goal[0] > 0.3:
         goal[0] += 0.015
-    if goal[0] < 0.22:
-        goal[0] -= 0.01
+    #if goal[0] < 0.22:
+        #goal[0] -= 0.01
     if goal[1] < -0.03:
         goal[1] -= 0.02
     if goal[1] < -0.17:
@@ -433,6 +433,9 @@ def scripted_grasp_v7(env, data_xyz, data_joint, noise_stds, detection_mode, ima
         elif action[4] > 0.5:
             gripper_closed = False
 
+        if obs['achieved_goal'][1] + action[1] > 0.04 and not gripper_closed:
+            action[1] = 0.04 - obs['achieved_goal'][1]
+
         next_obs, reward, done, info = env.step(action)
         print("REWARD:", reward)
 
@@ -500,7 +503,7 @@ def main(args):
     if args.detection_mode == 'rgb':
         file_read_failed = False
         if args.no_rgb_query:
-            image0 = gym_replab.utils.cv2.imread('image_empty.png')
+            image0 = gym_replab.utils.cv2.imread(args.image_save_dir + '/image_empty.png')
             if image0 is None:
                 print("Cannot find image_empty.png file! Querying rgb image!")
                 file_read_failed = True
@@ -514,7 +517,7 @@ def main(args):
             next = input('Place object on tray and press c to continue ')
             while next != 'c':
                 next = input('Place object on tray and press c to continue ')
-            gym_replab.utils.cv2.imwrite('image_empty.png', image0)
+            gym_replab.utils.cv2.imwrite(args.image_save_dir + '/image_empty.png', image0)
 
     if args.plot_grasp_locations:
         plt = gym_replab.utils.plt
@@ -563,6 +566,8 @@ def main(args):
                 policy_rate=args.policy_rate)
             object_grasped = augment_data_continuous(data_xyz, data_joint)
 
+        if args.image_save_dir != "" and object_grasped:
+            image0 = gym_replab.utils.cv2.imread(args.image_save_dir + '/image0.png')
 
         if goal is not None:
             if args.plot_grasp_locations:
@@ -596,6 +601,7 @@ if __name__ == '__main__':
                         action="store_true", default=False)
     parser.add_argument("--no_rgb_query", dest="no_rgb_query",
                         action="store_true", default=False)
+    parser.add_argument("--image_save_dir", type=str, required=True)
     parser.add_argument("--checkpoint", type=str, default="")
     parser.add_argument("--policy_rate", type=float, default=0.5)
 
@@ -615,7 +621,11 @@ if __name__ == '__main__':
     depth_image_service = env.depth_image_service
     rgb_image_service = gym_replab.utils.KinectImageService('rgb')
 
+
     if args.checkpoint == "":
         args.policy_rate = 0.0
+    print("ASDASDASDADASDA")
+    if args.image_save_dir != "":
+        env.set_image_save_dir(args.image_save_dir)
 
     main(args)

@@ -33,7 +33,7 @@ def downsample_average(image, num_pixels=4, save_dir=""):
                 j-num_pixels:j+num_pixels])
 
     if save_dir != "":
-        cv2.imwrite(os.path.dirname(save_dir) + '/averaged.png', new_image)
+        cv2.imwrite(save_dir + '/averaged.png', new_image)
     return new_image
 
 
@@ -50,7 +50,7 @@ def extract_points(image, stride=4, threshold=50, save_dir=""):
                 points.append([i, j])
 
     if save_dir != "":
-        cv2.imwrite(os.path.dirname(save_dir) + '/extracted.png', new_image)
+        cv2.imwrite(save_dir + '/extracted.png', new_image)
     return np.array(points, dtype='float')
 
 
@@ -64,7 +64,7 @@ def plot_centroids(image, centroids, save_dir):
     for centroid in centroids:
         new_image = cv2.circle(new_image, (int(centroid[1]), int(centroid[0])), radius=1, color=(0, 0, 255), thickness=1)
 
-    cv2.imwrite(os.path.dirname(save_dir) + '/centroids.png', new_image)
+    cv2.imwrite(save_dir + '/centroids.png', new_image)
 
 
 def get_rgb_centroids(image0, image1, num_centroids=1, save_dir=""):
