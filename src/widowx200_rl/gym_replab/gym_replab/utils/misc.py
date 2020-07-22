@@ -79,10 +79,10 @@ def get_center_and_second_pc(kinect_image_service):
     except:
         return None
 
-def get_random_center_rgb(image0, num_objects=1):
+def get_random_center_rgb(image0, num_objects=1, save_dir=""):
     image1 = get_image(512, 512)[150:]
     try:
-        centroids = get_rgb_centroids(image0, image1, num_objects)
+        centroids = get_rgb_centroids(image0, image1, num_objects, save_dir=save_dir)
         return rgb_to_robot_coords(centroids)[np.random.choice(num_objects)]
     except:
         return None

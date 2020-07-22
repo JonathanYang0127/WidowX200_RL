@@ -10,6 +10,7 @@ import rospy
 from rospy.numpy_msg import numpy_msg
 from rospy_tutorials.msg import Floats
 from std_msgs.msg import String
+from interbotix_sdk.srv import FirmwareGains, FirmwareGainsRequest
 from widowx200_core.ik import InverseKinematics
 from gym_replab.envs.widow200_base import Widow200RealRobotBaseEnv
 import sys
@@ -40,6 +41,8 @@ class Widow200DrawerEnv(Widow200RealRobotBaseEnv):
         self._gripper_open = 0.6
         self.reward_height_thresh = 0.14
 
+        self._safety_box = spaces.Box(low=np.array([0.13, -0.33, 0.049]),
+                                      high=np.array([0.4, 0.16, 0.2]), dtype=np.float32)
 
     def _set_action_space(self):
         #Normalized action space
@@ -213,12 +216,22 @@ class Widow200DrawerEnv(Widow200RealRobotBaseEnv):
 
 
     def lift_object(self):
-        lift_target = np.array([0.23, -0.04, self.reward_height_thresh + 0.02])
+        lift_target = np.array([self.current_pos[0], self.current_pos[1], self.reward_height_thresh + 0.04])
         moved = self.move_to_xyz(lift_target, wrist = self.current_pos[7], wait = 0.4)
         return moved
 
 
     def reset(self, gripper = True):
+        while True:
+            try:
+                self.get_observation_publisher.publish("GET_OBSERVATION")
+                self.current_pos = np.array(rospy.wait_for_message(
+                "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
+                break
+            except:
+                continue
+        self.open_gripper()
+        self.lift_object()
         self.move_to_neutral()
         if gripper:
             self._is_gripper_open = True
@@ -234,4 +247,27 @@ class Widow200DrawerEnv(Widow200RealRobotBaseEnv):
                 break
             except:
                 continue
+
+        random_rotate = np.random.uniform(-1.5, 1.5)
+        wrist_rotate = self.current_pos[7] + random_rotate
+        wrist_rotate = min(2.6, wrist_rotate)
+        target = np.array([0.23, -0.30, 0.16])
+        offset = np.array([np.random.uniform(-0.015, 0.015), np.random.uniform(-0.01, 0.01), 0])
+        self.move_to_xyz(target + offset, wrist=wrist_rotate)
         return self.get_observation()
+
+    def close_drawer(self):
+        while True:
+            try:
+                self.get_observation_publisher.publish("GET_OBSERVATION")
+                self.current_pos = np.array(rospy.wait_for_message(
+                "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
+                break
+            except:
+                continue
+
+        self.open_gripper()
+        self.lift_object()
+        self.move_to_xyz([0.23, -0.18, 0.18])
+        self.move_to_xyz([0.23, -0.18, 0.12])
+        self.move_to_xyz([0.23, -0.0, 0.12])

@@ -10,6 +10,7 @@ from PIL import Image
 import torch
 import pickle
 
+
 V5_GRASPING_ENVS = ['Widow200RealRobotGraspV5-v0']
 V6_GRASPING_ENVS = ['Widow200RealRobotGraspV6-v0']
 V7_GRASPING_ENVS = ['Widow200RealRobotGraspV7-v0']
@@ -145,7 +146,7 @@ def scripted_grasp_v5(env, data_xyz, data_joint, noise_stds):
 
 
 def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, detection_mode, image0, num_objects, save_video,\
-    policy=None, policy_rate=0.5):
+    policy=None, policy_rate=0.5, image_save_dir=""):
     env.move_to_neutral()
     time.sleep(1.0)
 
@@ -161,11 +162,11 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, detection_mode, ima
                 sys.exit(0)
         goal, object_vector = pc_data
     elif detection_mode == 'rgb':
-        goal = gym_replab.utils.get_random_center_rgb(image0, num_objects)
+        goal = gym_replab.utils.get_random_center_rgb(image0, num_objects, image_save_dir)
         while goal is None or goal[0] >= 0.45:
             env.drop_at_random_location()
             env.move_to_neutral()
-            goal = gym_replab.utils.get_random_center_rgb(image0, num_objects)
+            goal = gym_replab.utils.get_random_center_rgb(image0, num_objects, image_save_dir)
             loop_counter += 1
             if loop_counter >= 5:
                 sys.exit(0)
@@ -208,11 +209,12 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, detection_mode, ima
     wrist_rotate = min(2.6, wrist_rotate)
     images = []
 
-    try:
-        action = policy(obs['image'])
-        use_robot_state = False
-    except:
-        use_robot_state = True
+    if policy is not None:
+        try:
+            action = policy(obs['image'])
+            use_robot_state = False
+        except:
+            use_robot_state = True
 
 
     gripper_closed = False
@@ -301,7 +303,7 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, detection_mode, ima
     return goal
 
 def scripted_grasp_v7(env, data_xyz, data_joint, noise_stds, detection_mode, image0, num_objects, \
-    save_video, policy=None, policy_rate=0.5):
+    save_video, policy=None, policy_rate=0.5, image_save_dir=""):
 
     env.move_to_neutral()
     time.sleep(1.0)
@@ -318,11 +320,11 @@ def scripted_grasp_v7(env, data_xyz, data_joint, noise_stds, detection_mode, ima
                 sys.exit(0)
         goal, object_vector = pc_data
     elif detection_mode == 'rgb':
-        goal = gym_replab.utils.get_random_center_rgb(image0, num_objects)
+        goal = gym_replab.utils.get_random_center_rgb(image0, num_objects, image_save_dir)
         while goal is None or goal[0] >= 0.45:
             env.drop_at_random_location()
             env.move_to_neutral()
-            goal = gym_replab.utils.get_random_center_rgb(image0, num_objects)
+            goal = gym_replab.utils.get_random_center_rgb(image0, num_objects, image_save_dir)
             loop_counter += 1
             if loop_counter >= 5:
                 sys.exit(0)
@@ -332,7 +334,7 @@ def scripted_grasp_v7(env, data_xyz, data_joint, noise_stds, detection_mode, ima
     #goal[0] += np.random.uniform(low = -0.03, high = 0.03)
     #goal[1] += np.random.uniform(low = -0.03, high = 0.03)
 
-    goal[0] += np.random.normal(0, 0.005) 
+    goal[0] += np.random.normal(0, 0.005)
     if goal[0] > 0.3:
         goal[0] += 0.015
     #if goal[0] < 0.22:
@@ -364,11 +366,12 @@ def scripted_grasp_v7(env, data_xyz, data_joint, noise_stds, detection_mode, ima
     wrist_rotate = min(2.6, wrist_rotate)
     images = []
 
-    try:
-        action = policy(obs['image'])
-        use_robot_state = False
-    except:
-        use_robot_state = True
+    if policy is not None:
+        try:
+            action = policy(obs['image'])
+            use_robot_state = False
+        except:
+            use_robot_state = True
 
 
     gripper_closed = False
@@ -471,7 +474,7 @@ def augment_data_continuous(data_xyz, data_joint):
     return object_grasped
 
 
-def store_trajectory(data_xyz, data_joint, params):
+def store_trajectory(data_xyz, data_joint, params=None):
     pool_xyz = gym_replab.utils.DemoPool()
     pool_joint = gym_replab.utils.DemoPool()
 
@@ -517,6 +520,7 @@ def main(args):
             next = input('Place object on tray and press c to continue ')
             while next != 'c':
                 next = input('Place object on tray and press c to continue ')
+            print(args.image_save_dir)
             gym_replab.utils.cv2.imwrite(args.image_save_dir + '/image_empty.png', image0)
 
     if args.plot_grasp_locations:
@@ -555,7 +559,7 @@ def main(args):
             noise_stds[2] /= 3
             goal = scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, args.detection_mode, \
                 image0, args.num_objects, (i%args.video_save_frequency) == 0, policy=policy, \
-                policy_rate=args.policy_rate)
+                policy_rate=args.policy_rate, image_save_dir=args.image_save_dir)
             object_grasped = augment_data_continuous(data_xyz, data_joint)
         if args.env in V7_GRASPING_ENVS:
             noise_stds = [args.noise_std*3]*6
@@ -563,7 +567,7 @@ def main(args):
             noise_stds[2] /= 3
             goal = scripted_grasp_v7(env, data_xyz, data_joint, noise_stds, args.detection_mode, \
                 image0, args.num_objects, (i%args.video_save_frequency) == 0, policy=policy, \
-                policy_rate=args.policy_rate)
+                policy_rate=args.policy_rate, image_save_dir=args.image_save_dir)
             object_grasped = augment_data_continuous(data_xyz, data_joint)
 
         if args.image_save_dir != "" and object_grasped:
@@ -617,10 +621,9 @@ if __name__ == '__main__':
     ik = InverseKinematics()
     env = gym.make(args.env, observation_mode='verbose', reward_type='sparse', \
         grasp_detector='background_subtraction', transpose_image=True)._start_rospy()
+    env.set_default_firmware_gains()
 
     depth_image_service = env.depth_image_service
-    rgb_image_service = gym_replab.utils.KinectImageService('rgb')
-
 
     if args.checkpoint == "":
         args.policy_rate = 0.0

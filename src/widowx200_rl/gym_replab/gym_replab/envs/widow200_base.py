@@ -10,6 +10,8 @@ import rospy
 from rospy.numpy_msg import numpy_msg
 from rospy_tutorials.msg import Floats
 from std_msgs.msg import String
+import collections
+from interbotix_sdk.srv import FirmwareGains, FirmwareGainsRequest
 from widowx200_core.ik import InverseKinematics
 import sys
 sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
@@ -124,7 +126,7 @@ class Widow200RealRobotBaseEnv(gym.Env):
             goal[1] = np.random.uniform(low=goals_1[tmp[1]][0], high=goals_1[tmp[1]][1])
         '''
         goal[0] = np.random.uniform(low=0.16, high=0.34)
-        goal[1] = np.random.uniform(low=-0.22, high=0.0) #(-0.22, 0.14)
+        goal[1] = np.random.uniform(low=-0.22, high=-0.05) #(-0.22, 0.14)
 
         goal[2] = 0.14
         ik_command = self.ik._calculate_ik(goal, self.quat)[0][:5]
@@ -180,8 +182,10 @@ class Widow200RealRobotBaseEnv(gym.Env):
         pass
 
 
-    def _start_rospy(self):
+    def _start_rospy(self, use_kinect=True):
         rospy.init_node("WidowX200_Env")
+
+        #Publishers
         self.reset_publisher = rospy.Publisher(
             "/widowx_env/reset", String, queue_size=1)
         self.action_publisher = rospy.Publisher(
@@ -196,7 +200,56 @@ class Widow200RealRobotBaseEnv(gym.Env):
             "/widowx_env/get_observation", String, queue_size=1)
         rospy.sleep(2.0)
 
+
+        #Services
+        rospy.wait_for_service('/wx200/set_firmware_pid_gains')
+        self.firmware_pid_proxy = rospy.ServiceProxy('/wx200/set_firmware_pid_gains', FirmwareGains)
+
         #NOTE: ROS node must be initialized before depth image service is created
-        self.depth_image_service = utils.KinectImageService('sd_pts')
+        try:
+            self.depth_image_service = utils.KinectImageService('sd_pts')
+        except:
+            print("Kinect not being used!")
 
         return self
+
+
+    def set_default_firmware_gains(self):
+        gains = collections.OrderedDict()
+        gains["joint_id"] = 0
+        gains["Kp_pos"] = [800, 800, 800, 800, 640, 640]
+        gains["Ki_pos"] = [0, 0, 0, 0, 0, 0]
+        gains["Kd_pos"] = [0, 0, 0, 0, 3600, 3600]
+        gains["K1"] = [0, 0, 0, 0, 0, 0]
+        gains["K2"] = [0, 0, 0, 0, 0, 0]
+        gains["Kp_vel"] = [200, 200, 200, 200, 100, 100]
+        gains["Ki_vel"] = [1920] * 4 + [1000] * 2
+        req = FirmwareGainsRequest(*gains.values())
+        self.firmware_pid_proxy(req)
+
+
+    def set_low_firmware_gains(self):
+        gains = collections.OrderedDict()
+        gains["joint_id"] = 0
+        gains["Kp_pos"] = [700, 700, 700, 700, 640, 640]
+        gains["Ki_pos"] = [0, 0, 0, 0, 0, 0]
+        gains["Kd_pos"] = [0, 0, 0, 0, 3600, 3600]
+        gains["K1"] = [0, 0, 0, 0, 0, 0]
+        gains["K2"] = [0, 0, 0, 0, 0, 0]
+        gains["Kp_vel"] = [200, 200, 200, 200, 100, 100]
+        gains["Ki_vel"] = [1920] * 4 + [1000] * 2
+        req = FirmwareGainsRequest(*gains.values())
+        self.firmware_pid_proxy(req)
+
+    def set_custom_firmware_gains(self, factor):
+        gains = collections.OrderedDict()
+        gains["joint_id"] = 0
+        gains["Kp_pos"] = [int(800 / factor)] * 4 + [640] * 2
+        gains["Ki_pos"] = [0, 0, 0, 0, 0, 0]
+        gains["Kd_pos"] = [0, 0, 0, 0, 3600, 3600]
+        gains["K1"] = [0, 0, 0, 0, 0, 0]
+        gains["K2"] = [0, 0, 0, 0, 0, 0]
+        gains["Kp_vel"] = [200, 200, 200, 200, 100, 100]
+        gains["Ki_vel"] = [1920] * 4 + [1000] * 2
+        req = FirmwareGainsRequest(*gains.values())
+        self.firmware_pid_proxy(req)

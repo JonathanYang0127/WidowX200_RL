@@ -8,6 +8,7 @@ from scipy.cluster.vq import vq, kmeans, whiten
 from .background_subtraction import background_subtraction
 import os
 from sklearn.preprocessing import PolynomialFeatures
+from sklearn.decomposition import PCA
 
 '''
 RGB_TO_ROBOT_TRANSMATRIX = [[ 1.31473611e-01, -2.80861098e-01],
@@ -75,6 +76,21 @@ def get_rgb_centroids(image0, image1, num_centroids=1, save_dir=""):
     centroids = k_means(points, num_centroids)
     if save_dir != "":
         plot_centroids(img, centroids, save_dir)
+
+    return centroids
+
+
+def get_rgb_centroids_and_direction(image0, image1, num_centroids=1, distance_thresh=30, save_dir=""):
+    img, canvas = background_subtraction(image0, image1, False)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img = downsample_average(img, save_dir=save_dir)
+    points = extract_points(img, 6, 10, save_dir=save_dir)
+    centroids = k_means(points, num_centroids)
+    if save_dir != "":
+        plot_centroids(img, centroids, save_dir)
+
+    for c in centroids:
+        c_points = [i for i in points if np.linalg.norm(i - c) < distance_thresh]
 
     return centroids
 
