@@ -10,7 +10,6 @@ import rospy
 from rospy.numpy_msg import numpy_msg
 from rospy_tutorials.msg import Floats
 from std_msgs.msg import String
-from interbotix_sdk.srv import FirmwareGains, FirmwareGainsRequest
 from widowx200_core.ik import InverseKinematics
 from gym_replab.envs.widow200_base import Widow200RealRobotBaseEnv
 import sys
@@ -26,7 +25,7 @@ REWARD_FAIL = 0.0
 REWARD_SUCCESS = 1.0
 
 
-class Widow200DrawerEnv(Widow200RealRobotBaseEnv):
+class Widow200ObstacleRemovalEnv(Widow200RealRobotBaseEnv):
     def __init__(self, reward_type='sparse', **kwargs):
         super().__init__(**kwargs)
         self._reward_type = reward_type
@@ -41,14 +40,26 @@ class Widow200DrawerEnv(Widow200RealRobotBaseEnv):
         self._gripper_open = 0.6
         self.reward_height_thresh = 0.14
 
-        self._safety_box = spaces.Box(low=np.array([0.13, -0.33, 0.049]),
+        self._safety_box = spaces.Box(low=np.array([-0.04, -0.33, 0.049]),
                                       high=np.array([0.4, 0.16, 0.2]), dtype=np.float32)
+
 
     def _set_action_space(self):
         #Normalized action space
         self.action_space = spaces.Box(low=np.array([-1, -1, -1, -1, -1]),
                                        high=np.array([1, 1, 1, 1, 1]), dtype=np.float32)
 
+
+    def move_to_background_subtract(self):
+        while True:
+            try:
+                self.joint_publisher.publish(np.array([1.5, -0.455, -0.333, -1.631, 1.62], dtype='float32'))
+                self.current_pos = np.array(rospy.wait_for_message(
+                    "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
+                rospy.sleep(1.0)
+                break
+            except:
+                continue
 
     def check_if_object_grasped(self):
         if self._grasp_detector == 'background_subtraction':
@@ -64,8 +75,8 @@ class Widow200DrawerEnv(Widow200RealRobotBaseEnv):
             rospy.sleep(1.0)
             image1 = utils.get_image(512, 512)[150:]
             rospy.sleep(0.5)
-            object_grasped = utils.grasp_success_blob_detector(image0, image1, \
-                self.image_save_dir != "", self.image_save_dir)
+            object_grasped = utils.extract_points_success_detector(image0, image1)
+
             if object_grasped:
                 print("****************Object Grasp Succeeded!!!******************")
                 return True
@@ -216,22 +227,12 @@ class Widow200DrawerEnv(Widow200RealRobotBaseEnv):
 
 
     def lift_object(self):
-        lift_target = np.array([self.current_pos[0], self.current_pos[1], self.reward_height_thresh + 0.05])
+        lift_target = np.array([self.current_pos[0], self.current_pos[1], self.reward_height_thresh + 0.04])
         moved = self.move_to_xyz(lift_target, wrist = self.current_pos[7], wait = 0.4)
         return moved
 
 
     def reset(self, gripper = True):
-        while True:
-            try:
-                self.get_observation_publisher.publish("GET_OBSERVATION")
-                self.current_pos = np.array(rospy.wait_for_message(
-                "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
-                break
-            except:
-                continue
-        self.open_gripper()
-        self.lift_object()
         self.move_to_neutral()
         if gripper:
             self._is_gripper_open = True
@@ -247,21 +248,29 @@ class Widow200DrawerEnv(Widow200RealRobotBaseEnv):
                 break
             except:
                 continue
-
         return self.get_observation()
 
-    def close_drawer(self):
+
+    def drop_at_random_location(self, reset=True):
+        if reset:
+            self.reset_publisher.publish("NO_GRIPPER")
+            rospy.sleep(1.5)
+        goal = np.array([0, 0, 0], dtype = 'float32')
+        goal[0] = np.random.uniform(low=0.16, high=0.34)
+        goal[1] = np.random.uniform(low=-0.22, high=-0.12) #(-0.22, 0.14)
+        goal[2] = 0.12
+        ik_command = self.ik._calculate_ik(goal, self.quat)[0][:5]
+        if goal[1] > -0.1:
+            ik_command[4] = np.random.uniform(-0.2, 0.2)
+        else:
+            ik_command[4] = np.random.uniform(-1.2, 1.2)
         while True:
             try:
-                self.get_observation_publisher.publish("GET_OBSERVATION")
+                self.joint_publisher.publish(np.array(ik_command, dtype='float32'))
                 self.current_pos = np.array(rospy.wait_for_message(
-                "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
+                    "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
+                rospy.sleep(1)
                 break
             except:
                 continue
-
         self.open_gripper()
-        self.lift_object()
-        self.move_to_xyz([0.23, -0.18, 0.18])
-        self.move_to_xyz([0.23, -0.18, 0.12])
-        self.move_to_xyz([0.23, -0.0, 0.12])

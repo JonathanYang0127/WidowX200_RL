@@ -103,3 +103,12 @@ def rgb_to_robot_coords(rgb_coords, transmatrix=RGB_TO_ROBOT_TRANSMATRIX):
 
     robot_coords = rgb_coords @ transmatrix
     return robot_coords
+
+
+def extract_points_success_detector(image0, image1):
+    img, canvas = background_subtraction(image0, image1, False)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img = downsample_average(img, save_dir="")
+    points = extract_points(img, 6, 10, save_dir="")
+
+    return len(points) > 5
