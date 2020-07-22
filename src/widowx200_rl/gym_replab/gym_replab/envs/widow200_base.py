@@ -155,15 +155,15 @@ class Widow200RealRobotBaseEnv(gym.Env):
 
 
     def close_gripper(self):
-        while self.current_pos[8] > 0.3:
-            self.gripper_publisher.publish("CLOSE")
-            rospy.sleep(1)
-            try:
-                self.get_observation_publisher.publish("GET_OBSERVATION")
-                self.current_pos = np.array(rospy.wait_for_message(
-                "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
-            except:
-                continue
+        #while self.current_pos[8] > 0.5:
+        self.gripper_publisher.publish("CLOSE")
+        rospy.sleep(1)
+        try:
+            self.get_observation_publisher.publish("GET_OBSERVATION")
+            self.current_pos = np.array(rospy.wait_for_message(
+            "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
+        except:
+            pass
 
 
     def pull_image(self):
