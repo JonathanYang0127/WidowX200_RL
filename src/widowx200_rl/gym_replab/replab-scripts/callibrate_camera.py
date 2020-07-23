@@ -67,7 +67,7 @@ if __name__ == '__main__':
         while next != 't':
             next = input('Press t to get empty rgb image ')
         image0 = gym_replab.utils.get_image(512, 512)[150:]
-        
+
 
     goals = [[0.16, 0.13, 0.065],
     [0.26, 0.13, 0.065],
@@ -115,6 +115,15 @@ if __name__ == '__main__':
     if args.option == 'rgb' or args.option == 'both':
         print('RGB Coordinates: ')
         print(rgb_coords)
+        poly = PolynomialFeatures(2)
+        temp = poly.fit_transform(rgb_coords)
+        matrix = gym_replab.utils.compute_robot_transformation_matrix(np.array(temp), np.array(robot_coords))
+        print('RGB to Robot Coordinates Transformation Matrix: ')
+        print(matrix)
+        residuals = gym_replab.utils.rgb_to_robot_coords(rgb_coords, matrix) - robot_coords
+        residuals = [np.linalg.norm(i) for i in residuals]
+        print('Residuals: '
+        print(residuals)
 
     if args.option == 'depth' or args.option == 'both':
         print('Depth Coordinates: ')
