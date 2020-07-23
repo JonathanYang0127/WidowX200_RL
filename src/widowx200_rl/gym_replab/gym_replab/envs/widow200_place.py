@@ -46,8 +46,8 @@ class Widow200PlaceEnv(Widow200RealRobotBaseEnv):
 
     def _set_action_space(self):
         #Normalized action space
-        self.action_space = spaces.Box(low=np.array([-1, -1, -1, -1, -1]),
-                                       high=np.array([1, 1, 1, 1, 1]), dtype=np.float32)
+        self.action_space = spaces.Box(low=np.array([-1, -1, -1, -1, -1, -1]),
+                                       high=np.array([1, 1, 1, 1, 1, 1]), dtype=np.float32)
 
 
     def check_if_object_grasped(self):
