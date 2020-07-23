@@ -11,4 +11,4 @@ from gym_replab.envs.widow200_place import Widow200PlaceEnv
 from gym_replab.envs.widow200_grasp_v5_proxy import Widow200GraspV5ProxyEnv
 from gym_replab.envs.widow200_grasp_v6_proxy import Widow200GraspV6ProxyEnv
 from gym_replab.envs.widow200_drawer import Widow200DrawerEnv
-
+from gym_replab.envs.widow200_drawer_open import Widow200DrawerOpenEnv

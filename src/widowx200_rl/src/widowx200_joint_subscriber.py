@@ -82,9 +82,13 @@ def observation_cb(data):
 def reset(data):
     #widowx_controller.move_to_neutral()
     #rospy.sleep(1.5)
-    widowx_controller.move_to_reset()
-    rospy.sleep(1.0)
-    if data.data != "NO_GRIPPER":
+    if 'FAR_POSITION' in data.data:
+        widowx_controller.move_to_reset_far()
+        rospy.sleep(1.0)
+    else:
+        widowx_controller.move_to_reset()
+        rospy.sleep(1.0)
+    if not "NO_GRIPPER" in data.data:
         while widowx_controller._ik.get_joint_angles()[5] < 1.6:
              widowx_controller.open_gripper()
 

@@ -10,8 +10,10 @@ from PIL import Image
 import torch
 import pickle
 
-DRAWER_OPEN_ENVS = ['Widow200Drawer-v0']
+DRAWER_OPEN_AND_GRASP_ENVS = ['Widow200Drawer-v0']
+DRAWER_OPEN_ENVS = ['Widow200DrawerOpen-v0']
 OBSTABLE_REMOVAL_ENVS = ['Widow200ObstacleRemoval-v0']
+
 
 def make_dirs():
     global data_save_path, video_save_path, timestamp
@@ -72,7 +74,8 @@ def scripted_drawer_open(env, data_xyz, data_joint, noise_stds, \
                 wrist_diff *= 2
                 diff *= 10
                 gripper = 0.7
-                action = np.append(diff, [[wrist_diff * 3, gripper]])
+                neutral = 0.5
+                print("MOVING TO HANDLE")
             elif np.linalg.norm(obs['achieved_goal'][2] - 0.07) > 0.015 and not open:
                 target = np.array([0.265, -0.06, 0.07])
                 wrist_target = 0 if abs(obs['joints'][4]) < (obs['joints'][4] - 2.6) else 2.6
@@ -80,7 +83,8 @@ def scripted_drawer_open(env, data_xyz, data_joint, noise_stds, \
                 wrist_diff = wrist_target -  obs['joints'][4]
                 diff *= 6
                 gripper = 0.7
-                action = np.append(diff, [[wrist_diff * 3, gripper]])
+                neutral = 0.5
+                print("LOWERING")
             elif np.linalg.norm(obs['achieved_goal'][1] + 0.19) > 0.01 and not lift:
                 target = np.array([0.265, -0.2, 0.07])
                 wrist_target = 0 if abs(obs['joints'][4]) < (obs['joints'][4] - 2.6) else 2.6
@@ -89,7 +93,131 @@ def scripted_drawer_open(env, data_xyz, data_joint, noise_stds, \
                 diff *= 5
                 diff[1] *= 5
                 gripper = 0.7
-                action = np.append(diff, [[wrist_diff * 3, gripper]])
+                open = True
+                neutral = 0.5
+                print("OPENING")
+            elif obs['achieved_goal'][2] - 0.1 < -0.005 and not move_to_grasp:
+                target = np.array([0.14, -0.12, 0.24])
+                wrist_target = 0 if abs(obs['joints'][4]) < (obs['joints'][4] - 2.6) else 2.6
+                diff = target - obs['achieved_goal']
+                wrist_diff = wrist_target -  obs['joints'][4]
+                diff *= 5
+                diff[2] = 0.8
+                gripper = 0.7
+                lift = True
+                neutral = 0.5
+                print("LIFTING")
+            elif obs['achieved_goal'][0] > 0.19:
+                diff = np.array([0, 0, 1], dtype='float64')
+                wrist_diff = 0
+                gripper_closed = True
+                gripper = 0.7
+                neutral = -0.5
+                print("RESETING")
+            else:
+                diff = np.array([0, 0, 0], dtype='float64')
+                wrist_diff = 0
+                gripper_closed = True
+                gripper = 0.7
+                neutral = 0.5
+                print("DONE!")
+
+            action = np.append(diff, [[wrist_diff * 3, gripper, neutral]])
+            action = gym_replab.utils.add_noise_custom(action, noise_stds=noise_stds)
+
+        action = gym_replab.utils.clip_action(action)
+        print(action)
+
+        if action[4] < -0.5:
+            gripper_closed = True
+        elif action[4] > 0.5:
+            gripper_closed = False
+
+
+        next_obs, reward, done, info = env.step(action)
+        print(obs['joints'][5], finished_trajectory)
+        reward = 1 if finished_trajectory else 0
+        print("REWARD:", reward)
+
+        if info['timeout']:
+            env.open_gripper()
+            return None
+
+        data_xyz.append([obs, action, next_obs, reward, done])
+        data_joint.append([obs, info['joint_command'], next_obs, reward, done])
+        obs = next_obs
+
+        if done:
+            env.open_gripper()
+            break
+
+    make_dirs()
+    if save_video:
+        images[0].save('{}/scripted_grasp.gif'.format(video_save_path),
+                       format='GIF', append_images=images[1:],
+                       save_all=True, duration=100, loop=0)
+
+
+def scripted_drawer_open_and_grasp(env, data_xyz, data_joint, noise_stds, \
+        save_video, policy=None, policy_rate=0.5, image_save_dir=""):
+
+    obs = env.reset()
+    images = []
+
+    if policy is not None:
+        try:
+            action = policy(obs['image'])
+            use_robot_state = False
+        except:
+            use_robot_state = True
+
+
+    open = False
+    lift = False
+    move_to_grasp = False
+    lower = False
+    gripper_closed = False
+    grasped = False
+
+    for i in range(args.num_timesteps):
+        print(i)
+        print("State:", obs['state'][2])
+        finished_trajectory=False
+        images.append(Image.fromarray(np.uint8(obs['render'])))
+        if np.random.rand() < policy_rate:
+            print("Checkpoint Policy")
+            if use_robot_state:
+                action, _ = policy(np.append(obs['image'], obs['state']))
+            else:
+                action, _ = policy(obs['image'])
+
+        else:
+            print("Scripted Policy1")
+            images.append(Image.fromarray(np.uint8(obs['render'])))
+            print(obs['achieved_goal'])
+            if np.linalg.norm(obs['achieved_goal'][:2] - np.array([0.265, -0.06])) > 0.015 and not open:
+                target = np.array([0.265, -0.06, 0.17])
+                wrist_target = 0 if abs(obs['joints'][4]) < (obs['joints'][4] - 2.6) else 2.6
+                diff = target - obs['achieved_goal']
+                wrist_diff = wrist_target -  obs['joints'][4]
+                wrist_diff *= 2
+                diff *= 10
+                gripper = 0.7
+            elif np.linalg.norm(obs['achieved_goal'][2] - 0.07) > 0.015 and not open:
+                target = np.array([0.265, -0.06, 0.07])
+                wrist_target = 0 if abs(obs['joints'][4]) < (obs['joints'][4] - 2.6) else 2.6
+                diff = target - obs['achieved_goal']
+                wrist_diff = wrist_target -  obs['joints'][4]
+                diff *= 6
+                gripper = 0.7
+            elif np.linalg.norm(obs['achieved_goal'][1] + 0.19) > 0.01 and not lift:
+                target = np.array([0.265, -0.2, 0.07])
+                wrist_target = 0 if abs(obs['joints'][4]) < (obs['joints'][4] - 2.6) else 2.6
+                diff = target - obs['achieved_goal']
+                wrist_diff = wrist_target -  obs['joints'][4]
+                diff *= 5
+                diff[1] *= 5
+                gripper = 0.7
                 open = True
             elif obs['achieved_goal'][2] - 0.1 < -0.005 and not move_to_grasp:
                 target = np.array([0.14, -0.12, 0.24])
@@ -99,14 +227,12 @@ def scripted_drawer_open(env, data_xyz, data_joint, noise_stds, \
                 diff *= 5
                 diff[2] = 0.8
                 gripper = 0.7
-                action = np.append(diff, [[wrist_diff * 3, gripper]])
                 lift = True
             elif obs['joints'][5] > 0.3 and not move_to_grasp :
                 diff = np.array([0, 0, 1], dtype='float64')
                 wrist_diff = 0
                 gripper_closed = True
                 gripper = -0.7
-                action = np.append(diff, [[wrist_diff * 3, gripper]])
             elif np.linalg.norm(obs['achieved_goal'][:2] - np.array([0.258, -0.04])) > 0.008 and not lower:
                 target = np.array([0.256, -0.04, 0.18])
                 wrist_target = 1.2
@@ -115,7 +241,6 @@ def scripted_drawer_open(env, data_xyz, data_joint, noise_stds, \
                 diff *= 7
                 diff[0] *= 1.5
                 gripper = -0.7
-                action = np.append(diff, [[wrist_diff * 3, gripper]])
                 move_to_grasp = True
             elif np.linalg.norm(obs['achieved_goal'][2] - 0.06) > 0.01 and not grasped:
                 target = np.array([0.258, -0.04, 0.06])
@@ -125,7 +250,6 @@ def scripted_drawer_open(env, data_xyz, data_joint, noise_stds, \
                 diff *= 5
                 diff[2] *= 20
                 gripper = 0.7
-                action = np.append(diff, [[wrist_diff * 3, gripper]])
                 lower = True
             elif obs['joints'][5] > 0.3:
                 diff = np.array([0, 0, 1], dtype='float64')
@@ -133,7 +257,6 @@ def scripted_drawer_open(env, data_xyz, data_joint, noise_stds, \
                 gripper_closed = True
                 grasped = True
                 gripper = -0.7
-                action = np.append(diff, [[wrist_diff * 3, gripper]])
             else:
                 diff = np.array([0, 0, 0.1], dtype='float64')
                 wrist_diff = 0
@@ -434,14 +557,21 @@ def main(args):
         data_joint = []
         goal = np.array([0, 0, 0])
 
-        if args.env in DRAWER_OPEN_ENVS:
-            args.num_timesteps = 30
+        if args.env in DRAWER_OPEN_AND_GRASP_ENVS:
+            args.num_timesteps = 20
+            noise_stds = [args.noise_std*3]*6
+            noise_stds[4] = args.noise_std
+            scripted_drawer_open_and_gr(env, data_xyz, data_joint, noise_stds, \
+                (i%args.video_save_frequency) == 0, policy=policy, policy_rate=args.policy_rate, image_save_dir="")
+            env.close_drawer()
+        elif args.env in DRAWER_OPEN_ENVS:
+            args.num_timesteps = 15
             noise_stds = [args.noise_std*3]*6
             noise_stds[4] = args.noise_std
             scripted_drawer_open(env, data_xyz, data_joint, noise_stds, \
                 (i%args.video_save_frequency) == 0, policy=policy, policy_rate=args.policy_rate, image_save_dir="")
             env.close_drawer()
-        if args.env in OBSTABLE_REMOVAL_ENVS:
+        elif args.env in OBSTABLE_REMOVAL_ENVS:
             noise_stds = [args.noise_std*3]*6
             noise_stds[4] = 0.1
             noise_stds[2] /= 3
@@ -460,7 +590,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--env", type=str,
-                        choices=tuple(DRAWER_OPEN_ENVS + OBSTABLE_REMOVAL_ENVS),
+                        choices=tuple(DRAWER_OPEN_AND_GRASP_ENVS + DRAWER_OPEN_ENVS + OBSTABLE_REMOVAL_ENVS),
                         required=True)
     parser.add_argument("-d", "--data_save_directory", type=str, default="WidowX200GraspV5ShortTest")
     parser.add_argument("--noise_std", type=float, default=0.01)
@@ -489,7 +619,7 @@ if __name__ == '__main__':
     env = gym.make(args.env, observation_mode='verbose', reward_type='sparse', \
         grasp_detector='background_subtraction', transpose_image=True)._start_rospy()
     #env.set_low_firmware_gains()
-    env.set_custom_firmware_gains(1.1)
+    env.set_custom_firmware_gains(1.15)
 
     depth_image_service = env.depth_image_service
 

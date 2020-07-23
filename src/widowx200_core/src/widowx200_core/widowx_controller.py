@@ -43,6 +43,15 @@ class WidowXController:
         self.move_to_target_joints(RESET_JOINTS)
 
 
+    def move_to_reset_far(self):
+        '''
+        Move arm to far reset position
+        '''
+        #self.move_to_target_joints(RESET_JOINTS_SLACK)
+        #rospy.sleep(1.0)
+        self.move_to_target_joints(RESET_JOINTS_FAR)
+
+
     def move_gripper(self, cmd):
         self._single_joint_pub.publish(SingleCommand('gripper', cmd))
         rospy.sleep(GRIPPER_WAIT_TIME)

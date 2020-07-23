@@ -26,7 +26,7 @@ REWARD_FAIL = 0.0
 REWARD_SUCCESS = 1.0
 
 
-class Widow200PlaceEnv(Widow200RealRobotBaseEnv):
+class Widow200DrawerOpenEnv(Widow200RealRobotBaseEnv):
     def __init__(self, reward_type='sparse', **kwargs):
         super().__init__(**kwargs)
         self._reward_type = reward_type
@@ -41,13 +41,13 @@ class Widow200PlaceEnv(Widow200RealRobotBaseEnv):
         self._gripper_open = 0.6
         self.reward_height_thresh = 0.14
 
-        self._safety_box = spaces.Box(low=np.array([0.13, -0.30, 0.049]),
+        self._safety_box = spaces.Box(low=np.array([0.13, -0.33, 0.049]),
                                       high=np.array([0.4, 0.16, 0.2]), dtype=np.float32)
 
     def _set_action_space(self):
         #Normalized action space
-        self.action_space = spaces.Box(low=np.array([-1, -1, -1, -1, -1]),
-                                       high=np.array([1, 1, 1, 1, 1]), dtype=np.float32)
+        self.action_space = spaces.Box(low=np.array([-1, -1, -1, -1, -1, -1]),
+                                       high=np.array([1, 1, 1, 1, 1, 1]), dtype=np.float32)
 
 
     def check_if_object_grasped(self):
@@ -155,11 +155,12 @@ class Widow200PlaceEnv(Widow200RealRobotBaseEnv):
     def step(self, action):
         '''
         TODO: Change quaternion based on wrist rotation
-        action: [x, y, z, wrist, gripper]
+        action: [x, y, z, wrist, gripper, neutral]
         '''
         action = np.array(action, dtype='float32')
         action = np.clip(action, self.action_space.low, self.action_space.high)
         gripper_command = action[4]
+        neutral = action[5]
 
         action /= 3
         action[2] *= 4
@@ -195,22 +196,18 @@ class Widow200PlaceEnv(Widow200RealRobotBaseEnv):
             if not moved:
                 return None, None, None, {'timeout': True}
 
+        if neutral < 0:
+            self.move_to_neutral()
+            self.reset()
+
         step_tuple = self._generate_step_tuple()
 
         #Add joint information to step tuple
         step_tuple[3]['joint_command'] = np.append(joint_action[:5], \
             np.array([[gripper_command]], dtype='float32'))
+
         return step_tuple
 
-
-    def lift_object(self):
-        self.move_to_xyz([0.18, -0.04, 0.18], wrist=1.2)
-
-
-    def lift_up(self):
-        lift_target = np.array([self.current_pos[0], self.current_pos[1], 0.175])
-        moved = self.move_to_xyz(lift_target, wrist = self.current_pos[7], wait = 0.2)
-        return moved
 
     def set_goal(self, goal):
         self.goal = goal
@@ -224,6 +221,12 @@ class Widow200PlaceEnv(Widow200RealRobotBaseEnv):
         return self.get_observation(), reward, False, info
 
 
+    def lift_object(self):
+        lift_target = np.array([self.current_pos[0], self.current_pos[1], self.reward_height_thresh + 0.05])
+        moved = self.move_to_xyz(lift_target, wrist = self.current_pos[7], wait = 0.4)
+        return moved
+
+
     def reset(self, gripper = True):
         while True:
             try:
@@ -233,8 +236,13 @@ class Widow200PlaceEnv(Widow200RealRobotBaseEnv):
                 break
             except:
                 continue
+        self.open_gripper()
         self.move_to_neutral()
-        self.reset_publisher.publish("FAR_POSITION NO_GRIPPER")
+        if gripper:
+            self._is_gripper_open = True
+            self.reset_publisher.publish("FAR_POSITION OPEN_GRIPPER")
+        else:
+            self.reset_publisher.publish("FAR_POSITION NO_GRIPPER")
         rospy.sleep(1.0)
         while True:
             try:
@@ -244,8 +252,20 @@ class Widow200PlaceEnv(Widow200RealRobotBaseEnv):
                 break
             except:
                 continue
-
-        offset = np.random.uniform(-0.01, 0.01, (3,))
-        offset[2] = (offset[2] + 0.01) / 2
-        self.close_gripper()
         return self.get_observation()
+
+    def close_drawer(self):
+        while True:
+            try:
+                self.get_observation_publisher.publish("GET_OBSERVATION")
+                self.current_pos = np.array(rospy.wait_for_message(
+                "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
+                break
+            except:
+                continue
+
+        self.open_gripper()
+        self.lift_object()
+        self.move_to_xyz([0.23, -0.18, 0.18])
+        self.move_to_xyz([0.23, -0.18, 0.12])
+        self.move_to_xyz([0.23, 0.02, 0.12])

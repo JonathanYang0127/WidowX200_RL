@@ -100,7 +100,7 @@ def scripted_place(env, data_xyz, data_joint, noise_stds, \
         if info['timeout']:
             env.open_gripper()
             return None
-            
+
         if relabel_gripper:
             action[4] = 0.7
             reward = 1
@@ -386,6 +386,7 @@ def main(args):
             noise_stds[4] = args.noise_std
             scripted_place(env, data_xyz, data_joint, noise_stds, \
                 (i%args.video_save_frequency) == 0, policy=policy, policy_rate=args.policy_rate, image_save_dir="")
+            env.lift_up()
         elif args.env in PICK_ENVS:
             if args.image_save_dir != "" and object_grasped:
                 image0 = gym_replab.utils.cv2.imread(args.image_save_dir + '/image0.png')
