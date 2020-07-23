@@ -39,6 +39,11 @@ register(id='Widow200DrawerOpen-v0',
          entry_point='gym_replab.envs:Widow200DrawerOpenEnv',
          )
 
+register(id='Widow200DrawerGrasp-v0',
+         entry_point='gym_replab.envs:Widow200DrawerGraspEnv',
+         )
+
+
 register(id='Widow200Place-v0',
          entry_point='gym_replab.envs:Widow200PlaceEnv',
          )

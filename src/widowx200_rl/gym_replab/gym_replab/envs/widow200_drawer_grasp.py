@@ -26,7 +26,7 @@ REWARD_FAIL = 0.0
 REWARD_SUCCESS = 1.0
 
 
-class Widow200DrawerOpenEnv(Widow200RealRobotBaseEnv):
+class Widow200DrawerGraspEnv(Widow200RealRobotBaseEnv):
     def __init__(self, reward_type='sparse', **kwargs):
         super().__init__(**kwargs)
         self._reward_type = reward_type
