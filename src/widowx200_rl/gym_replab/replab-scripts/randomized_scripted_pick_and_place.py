@@ -420,8 +420,8 @@ if __name__ == '__main__':
     ik = InverseKinematics()
     env = gym.make(args.env, observation_mode='verbose', reward_type='sparse', \
         grasp_detector='background_subtraction', transpose_image=True)._start_rospy()
-    #env.set_low_firmware_gains()
-    env.set_custom_firmware_gains(1.2)
+    env.set_low_firmware_gains()
+    #env.set_custom_firmware_gains(1.2)
 
     depth_image_service = env.depth_image_service
 
