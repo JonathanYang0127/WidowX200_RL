@@ -150,6 +150,7 @@ class Widow200RealRobotBaseEnv(gym.Env):
                 self.get_observation_publisher.publish("GET_OBSERVATION")
                 self.current_pos = np.array(rospy.wait_for_message(
                 "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
+                self._is_gripper_open = True
             except:
                 continue
 
@@ -162,6 +163,7 @@ class Widow200RealRobotBaseEnv(gym.Env):
             self.get_observation_publisher.publish("GET_OBSERVATION")
             self.current_pos = np.array(rospy.wait_for_message(
             "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
+            self._is_gripper_open = False
         except:
             pass
 

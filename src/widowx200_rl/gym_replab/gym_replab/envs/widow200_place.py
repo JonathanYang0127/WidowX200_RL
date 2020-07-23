@@ -203,8 +203,8 @@ class Widow200PlaceEnv(Widow200RealRobotBaseEnv):
         return step_tuple
 
 
-    def lift_object(self, goal);
-        self.move_to_xyz([0.16, -0.04, 0.17], wrist=0)
+    def lift_object(self):
+        self.move_to_xyz([0.18, -0.04, 0.17], wrist=1.2)
 
     def set_goal(self, goal):
         self.goal = goal
@@ -227,14 +227,8 @@ class Widow200PlaceEnv(Widow200RealRobotBaseEnv):
                 break
             except:
                 continue
-        self.open_gripper()
-        self.lift_object()
         self.move_to_neutral()
-        if gripper:
-            self._is_gripper_open = True
-            self.reset_publisher.publish("OPEN_GRIPPER")
-        else:
-            self.reset_publisher.publish("NO_GRIPPER")
+        self.reset_publisher.publish("NO_GRIPPER")
         rospy.sleep(1.0)
         while True:
             try:
@@ -245,7 +239,7 @@ class Widow200PlaceEnv(Widow200RealRobotBaseEnv):
             except:
                 continue
 
-        wrist_target = np.random.uniform(-0.04, 0.04)
-        self.move_to_xyz(np.array([0.16, -0.04, 0.17]), wrist=wrist_target)
+        offset = np.random.uniform(-0.01, 0.01, (3,))
+        self.move_to_xyz(np.array([0.18, -0.04, 0.17]) + offset, wrist=1.2)
+        self.close_gripper()
         return self.get_observation()
-
