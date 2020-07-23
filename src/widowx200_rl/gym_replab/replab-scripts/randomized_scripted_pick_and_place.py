@@ -10,7 +10,10 @@ from PIL import Image
 import torch
 import pickle
 
+
+PICK_ENVS = []
 PLACE_ENVS = ['Widow200Place-v0']
+
 
 def make_dirs():
     global data_save_path, video_save_path, timestamp
@@ -97,7 +100,7 @@ def scripted_place(env, data_xyz, data_joint, noise_stds, \
         if info['timeout']:
             env.open_gripper()
             return None
-
+            
         if relabel_gripper:
             action[4] = 0.7
             reward = 1
@@ -377,12 +380,13 @@ def main(args):
         goal = np.array([0, 0, 0])
 
         if args.env in PLACE_ENVS:
+            args.num_timesteps = 10
             noise_stds = [args.noise_std*3]*6
             noise_stds[4] = args.noise_std
-            scripted_drawer_open(env, data_xyz, data_joint, noise_stds, \
+            scripted_place(env, data_xyz, data_joint, noise_stds, \
                 (i%args.video_save_frequency) == 0, policy=policy, policy_rate=args.policy_rate, image_save_dir="")
-            
-       if args.image_save_dir != "" and object_grasped:
+        elif args.env in PICK_ENVS:
+            if args.image_save_dir != "" and object_grasped:
                 image0 = gym_replab.utils.cv2.imread(args.image_save_dir + '/image0.png')
 
         if goal is not None:
@@ -392,14 +396,14 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--env", type=str,
-                        choices=tuple(DRAWER_OPEN_ENVS + OBSTABLE_REMOVAL_ENVS),
+                        choices=tuple(PLACE_ENVS),
                         required=True)
     parser.add_argument("-d", "--data_save_directory", type=str, default="WidowX200GraspV5ShortTest")
     parser.add_argument("--noise_std", type=float, default=0.01)
     parser.add_argument("--detection_mode", type=str, default='depth')
     parser.add_argument("--num_objects", type=int, default=1)
     parser.add_argument("--num_trajectories", type=int, default=50000)
-    parser.add_argument("--num_timesteps", type=int, default=40)
+    parser.add_argument("--num_timesteps", type=int, default=20)
     parser.add_argument("--video_save_frequency", type=int,
                         default=1, help="Set to zero for no video saving")
     parser.add_argument("--no_rgb_query", dest="no_rgb_query",

@@ -107,7 +107,7 @@ def scripted_drawer_open(env, data_xyz, data_joint, noise_stds, \
                 gripper_closed = True
                 gripper = -0.7
                 action = np.append(diff, [[wrist_diff * 3, gripper]])
-            elif np.linalg.norm(obs['achieved_goal'][:2] - np.array([0.26, -0.04])) > 0.01 and not lower:
+            elif np.linalg.norm(obs['achieved_goal'][:2] - np.array([0.258, -0.04])) > 0.008 and not lower:
                 target = np.array([0.256, -0.04, 0.18])
                 wrist_target = 1.2
                 diff = target - obs['achieved_goal']
@@ -435,6 +435,7 @@ def main(args):
         goal = np.array([0, 0, 0])
 
         if args.env in DRAWER_OPEN_ENVS:
+            args.num_timesteps = 30
             noise_stds = [args.noise_std*3]*6
             noise_stds[4] = args.noise_std
             scripted_drawer_open(env, data_xyz, data_joint, noise_stds, \
@@ -488,7 +489,7 @@ if __name__ == '__main__':
     env = gym.make(args.env, observation_mode='verbose', reward_type='sparse', \
         grasp_detector='background_subtraction', transpose_image=True)._start_rospy()
     #env.set_low_firmware_gains()
-    env.set_custom_firmware_gains(1.2)
+    env.set_custom_firmware_gains(1.1)
 
     depth_image_service = env.depth_image_service
 
