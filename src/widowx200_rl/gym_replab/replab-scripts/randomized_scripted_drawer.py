@@ -96,7 +96,7 @@ def scripted_drawer_open(env, data_xyz, data_joint, noise_stds, \
                 open = True
                 neutral = 0.5
                 print("OPENING")
-            elif obs['achieved_goal'][2] - 0.1 < -0.005 and not move_to_grasp:
+            elif obs['achieved_goal'][2] - 0.12 < -0.005 and not move_to_grasp:
                 target = np.array([0.14, -0.12, 0.24])
                 wrist_target = 0 if abs(obs['joints'][4]) < (obs['joints'][4] - 2.6) else 2.6
                 diff = target - obs['achieved_goal']
@@ -120,6 +120,7 @@ def scripted_drawer_open(env, data_xyz, data_joint, noise_stds, \
                 gripper_closed = True
                 gripper = 0.7
                 neutral = 0.5
+                finished_trajectory = True
                 print("DONE!")
 
             action = np.append(diff, [[wrist_diff * 3, gripper, neutral]])
@@ -619,7 +620,7 @@ if __name__ == '__main__':
     env = gym.make(args.env, observation_mode='verbose', reward_type='sparse', \
         grasp_detector='background_subtraction', transpose_image=True)._start_rospy()
     #env.set_low_firmware_gains()
-    env.set_custom_firmware_gains(1.15)
+    env.set_custom_firmware_gains(1.2)
 
     depth_image_service = env.depth_image_service
 
