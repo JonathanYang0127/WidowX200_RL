@@ -64,13 +64,14 @@ def scripted_place(env, data_xyz, data_joint, noise_stds, \
             images.append(Image.fromarray(np.uint8(obs['render'])))
             print(obs['achieved_goal'])
             if np.linalg.norm(obs['achieved_goal'][:2] - np.array([0.265, 0.06])) > 0.015 and not drop_object:
-                target = np.array([0.265, 0.06, 0.17])
+                target = np.array([0.265, 0.06, 0.175])
                 wrist_target = 0
                 diff = target - obs['achieved_goal']
                 wrist_diff = wrist_target -  obs['joints'][4]
-                diff *= 10
+                diff *= 5
                 gripper = -0.7
                 action = np.append(diff, [[wrist_diff * 3, gripper]])
+                print("Moving to Drop")
             else:
                 diff = np.array([0, 0, 1], dtype='float64')
                 wrist_diff = 0
@@ -79,6 +80,7 @@ def scripted_place(env, data_xyz, data_joint, noise_stds, \
                 action = np.append(diff, [[wrist_diff * 3, gripper]])
                 relabel_gripper = True
                 drop_object = True
+                print("Placing")
 
             action = np.append(diff, [[wrist_diff * 3, gripper]])
             action = gym_replab.utils.add_noise_custom(action, noise_stds=noise_stds)
@@ -94,8 +96,6 @@ def scripted_place(env, data_xyz, data_joint, noise_stds, \
 
         next_obs, reward, done, info = env.step(action)
         print(obs['joints'][5], finished_trajectory)
-        reward = 1 if finished_trajectory else 0
-        print("REWARD:", reward)
 
         if info['timeout']:
             env.open_gripper()
@@ -107,6 +107,7 @@ def scripted_place(env, data_xyz, data_joint, noise_stds, \
         else:
             reward = 0
 
+        print("REWARD: ", reward)
         data_xyz.append([obs, action, next_obs, reward, done])
         data_joint.append([obs, info['joint_command'], next_obs, reward, done])
         obs = next_obs
