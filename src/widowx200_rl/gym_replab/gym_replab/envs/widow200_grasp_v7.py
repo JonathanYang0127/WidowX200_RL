@@ -39,12 +39,12 @@ class Widow200RealRobotGraspV7Env(Widow200RealRobotBaseEnv):
         self._gripper_closed = -0.3
         self._gripper_open = 0.6
         self.reward_height_thresh = 0.14
-        
+
 
     def _set_action_space(self):
         #Normalized action space
-        self.action_space = spaces.Box(low=np.array([-1, -1, -1, -1, -1]),
-                                       high=np.array([1, 1, 1, 1, 1]), dtype=np.float32)
+        self.action_space = spaces.Box(low=np.array([-1, -1, -1, -1, -1, -1]),
+                                       high=np.array([1, 1, 1, 1, 1, 1]), dtype=np.float32)
 
 
     def check_if_object_grasped(self):
@@ -61,8 +61,7 @@ class Widow200RealRobotGraspV7Env(Widow200RealRobotBaseEnv):
             rospy.sleep(1.0)
             image1 = utils.get_image(512, 512)[150:]
             rospy.sleep(0.5)
-            object_grasped = utils.grasp_success_blob_detector(image0, image1, \
-                self.image_save_dir != "", self.image_save_dir)
+            object_grasped = utils.extract_points_success_detector(image0, image1)
             if object_grasped:
                 print("****************Object Grasp Succeeded!!!******************")
                 return True
@@ -152,11 +151,12 @@ class Widow200RealRobotGraspV7Env(Widow200RealRobotBaseEnv):
     def step(self, action):
         '''
         TODO: Change quaternion based on wrist rotation
-        action: [x, y, z, wrist, gripper]
+        action: [x, y, z, wrist, gripper, neutral]
         '''
         action = np.array(action, dtype='float32')
         action = np.clip(action, self.action_space.low, self.action_space.high)
         gripper_command = action[4]
+        neutral = action[5]
 
         action /= 3
         action[2] *= 4
@@ -192,11 +192,16 @@ class Widow200RealRobotGraspV7Env(Widow200RealRobotBaseEnv):
             if not moved:
                 return None, None, None, {'timeout': True}
 
+        if neutral < 0:
+            self.move_to_neutral()
+            self.reset(gripper=False)
+
         step_tuple = self._generate_step_tuple()
 
         #Add joint information to step tuple
         step_tuple[3]['joint_command'] = np.append(joint_action[:5], \
             np.array([[gripper_command]], dtype='float32'))
+
         return step_tuple
 
 
@@ -219,12 +224,16 @@ class Widow200RealRobotGraspV7Env(Widow200RealRobotBaseEnv):
 
 
     def reset(self, gripper = True):
+        while True:
+            try:
+                self.get_observation_publisher.publish("GET_OBSERVATION")
+                self.current_pos = np.array(rospy.wait_for_message(
+                "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
+                break
+            except:
+                continue
         self.move_to_neutral()
-        if gripper:
-            self._is_gripper_open = True
-            self.reset_publisher.publish("OPEN_GRIPPER")
-        else:
-            self.reset_publisher.publish("NO_GRIPPER")
+        self.reset_publisher.publish("FAR_POSITION NO_GRIPPER")
         rospy.sleep(1.0)
         while True:
             try:
@@ -234,4 +243,29 @@ class Widow200RealRobotGraspV7Env(Widow200RealRobotBaseEnv):
                 break
             except:
                 continue
+        if gripper:
+            self.open_gripper()
         return self.get_observation()
+
+
+    def drop_at_random_location(self, reset=True):
+        if reset:
+            self.reset_publisher.publish("NO_GRIPPER")
+            rospy.sleep(1.5)
+        goal = np.array([0, 0, 0], dtype = 'float32')
+
+        goal[0] = np.random.uniform(low=0.16, high=0.34)
+        goal[1] = np.random.uniform(low=-0.20, high=-0.04) #(-0.22, 0.14)
+
+        goal[2] = 0.14
+        ik_command = self.ik._calculate_ik(goal, self.quat)[0][:5]
+        while True:
+            try:
+                self.joint_publisher.publish(np.array(ik_command, dtype='float32'))
+                self.current_pos = np.array(rospy.wait_for_message(
+                    "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
+                rospy.sleep(1)
+                break
+            except:
+                continue
+        self.open_gripper()

@@ -155,11 +155,12 @@ class Widow200PlaceEnv(Widow200RealRobotBaseEnv):
     def step(self, action):
         '''
         TODO: Change quaternion based on wrist rotation
-        action: [x, y, z, wrist, gripper]
+        action: [x, y, z, wrist, gripper, neutral]
         '''
         action = np.array(action, dtype='float32')
         action = np.clip(action, self.action_space.low, self.action_space.high)
         gripper_command = action[4]
+        neutral = action[5]
 
         action /= 3
         action[2] *= 4
@@ -195,16 +196,23 @@ class Widow200PlaceEnv(Widow200RealRobotBaseEnv):
             if not moved:
                 return None, None, None, {'timeout': True}
 
+        if neutral < 0:
+            self.move_to_neutral()
+            self.reset(gripper=False)
+
         step_tuple = self._generate_step_tuple()
 
         #Add joint information to step tuple
         step_tuple[3]['joint_command'] = np.append(joint_action[:5], \
             np.array([[gripper_command]], dtype='float32'))
+
         return step_tuple
 
 
     def lift_object(self):
-        self.move_to_xyz([0.18, -0.04, 0.18], wrist=1.2)
+        lift_target = np.array([self.current_pos[0], self.current_pos[1], self.reward_height_thresh + 0.05])
+        moved = self.move_to_xyz(lift_target, wrist = self.current_pos[7], wait = 0.4)
+        return moved
 
 
     def lift_up(self):
@@ -245,7 +253,6 @@ class Widow200PlaceEnv(Widow200RealRobotBaseEnv):
             except:
                 continue
 
-        offset = np.random.uniform(-0.01, 0.01, (3,))
-        offset[2] = (offset[2] + 0.01) / 2
-        self.close_gripper()
+        if gripper:
+            self.close_gripper()
         return self.get_observation()
