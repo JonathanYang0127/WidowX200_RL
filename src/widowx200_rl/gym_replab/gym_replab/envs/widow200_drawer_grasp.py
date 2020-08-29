@@ -197,8 +197,8 @@ class Widow200DrawerGraspEnv(Widow200RealRobotBaseEnv):
                 return None, None, None, {'timeout': True}
 
         if neutral < 0:
-            self.move_to_neutral()
-            self.reset()
+            #self.move_to_neutral()
+            self.reset(lift=False, neutral=False)
 
         step_tuple = self._generate_step_tuple()
 
@@ -227,7 +227,7 @@ class Widow200DrawerGraspEnv(Widow200RealRobotBaseEnv):
         return moved
 
 
-    def reset(self, gripper = True):
+    def reset(self, gripper = True, lift=False, neutral=True):
         while True:
             try:
                 self.get_observation_publisher.publish("GET_OBSERVATION")
@@ -237,7 +237,10 @@ class Widow200DrawerGraspEnv(Widow200RealRobotBaseEnv):
             except:
                 continue
         self.open_gripper()
-        self.move_to_neutral()
+        if lift:
+            self.lift_object()
+        if neutral:
+            self.move_to_neutral()
         if gripper:
             self._is_gripper_open = True
             self.reset_publisher.publish("FAR_POSITION OPEN_GRIPPER")
