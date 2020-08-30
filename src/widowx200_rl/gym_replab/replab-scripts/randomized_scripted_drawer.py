@@ -184,11 +184,12 @@ def scripted_drawer_grasp(env, data_xyz, data_joint, noise_stds, \
     grasped = False
     finished_trajectory=False
 
-    random_rotate = np.random.uniform(-0.7, 0.5)
-    #random_rotate = -0.5
+    random_rotate = np.random.uniform(-0.7, 0.7)
+    #random_rotate = 0.5
     #xyz_offset = np.random.uniform(0, 0.005)
     print('wrist', random_rotate)
-    wrist_target = obs['joints'][5] + random_rotate
+    print(obs['joints'])
+    wrist_target = obs['joints'][4] + random_rotate
     images = []
     vertical_offset = np.random.uniform(0, 0.018) - 0.02
     horizontal_offset = np.random.uniform(0, 0.01) - 0.005

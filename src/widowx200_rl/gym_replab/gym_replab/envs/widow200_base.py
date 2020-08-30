@@ -176,6 +176,17 @@ class Widow200RealRobotBaseEnv(gym.Env):
             pass
 
 
+    def get_current_pos(self):
+        try:
+            self.get_observation_publisher.publish("GET_OBSERVATION")
+            self.current_pos = np.array(rospy.wait_for_message(
+            "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
+        except:
+            pass
+
+        return self.current_pos
+
+
     def pull_image(self):
         img = utils.get_image(*self.image_shape)
         if self._transpose_image:
