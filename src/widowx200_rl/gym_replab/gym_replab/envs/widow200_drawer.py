@@ -230,7 +230,7 @@ class Widow200DrawerEnv(Widow200RealRobotBaseEnv):
                 break
             except:
                 continue
-        self.open_gripper()
+        #self.open_gripper()
         self.lift_object()
         self.move_to_neutral()
         if gripper:

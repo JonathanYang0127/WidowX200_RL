@@ -197,8 +197,8 @@ class Widow200DrawerOpenEnv(Widow200RealRobotBaseEnv):
                 return None, None, None, {'timeout': True}
 
         if neutral < 0:
-            self.move_to_neutral()
-            self.reset()
+            #self.move_to_neutral()
+            self.reset(neutral=False)
 
         step_tuple = self._generate_step_tuple()
 
@@ -227,7 +227,7 @@ class Widow200DrawerOpenEnv(Widow200RealRobotBaseEnv):
         return moved
 
 
-    def reset(self, gripper = True):
+    def reset(self, gripper = True, lift=False, neutral=True):
         while True:
             try:
                 self.get_observation_publisher.publish("GET_OBSERVATION")
@@ -236,8 +236,11 @@ class Widow200DrawerOpenEnv(Widow200RealRobotBaseEnv):
                 break
             except:
                 continue
-        self.open_gripper()
-        self.move_to_neutral()
+        #self.open_gripper()
+        if lift:
+            self.lift_object()
+        if neutral:
+            self.move_to_neutral()
         if gripper:
             self._is_gripper_open = True
             self.reset_publisher.publish("FAR_POSITION OPEN_GRIPPER")
@@ -267,6 +270,7 @@ class Widow200DrawerOpenEnv(Widow200RealRobotBaseEnv):
 
         self.open_gripper()
         self.lift_object()
-        self.move_to_xyz([0.23, -0.18, 0.18])
-        self.move_to_xyz([0.23, -0.18, 0.12])
+        #self.move_to_xyz([self.current_pos[0], self.current_pos[1], 0.18])
+        self.move_to_xyz([0.23, -0.19, 0.18])
+        self.move_to_xyz([0.23, -0.19, 0.12])
         self.move_to_xyz([0.23, 0.02, 0.12])

@@ -68,8 +68,8 @@ def scripted_drawer_open(env, data_xyz, data_joint, noise_stds, \
             print("Scripted Policy1")
             images.append(Image.fromarray(np.uint8(obs['render'])))
             print(obs['achieved_goal'])
-            if np.linalg.norm(obs['achieved_goal'][:2] - np.array([0.265, -0.06])) > 0.015 and not open:
-                target = np.array([0.265, -0.06, 0.17])
+            if np.linalg.norm(obs['achieved_goal'][:2] - np.array([0.27, -0.06])) > 0.015 and not open:
+                target = np.array([0.275, -0.06, 0.17])
                 wrist_target = 0 if abs(obs['joints'][4]) < (obs['joints'][4] - 2.6) else 2.6
                 diff = target - obs['achieved_goal']
                 wrist_diff = wrist_target -  obs['joints'][4]
@@ -78,8 +78,8 @@ def scripted_drawer_open(env, data_xyz, data_joint, noise_stds, \
                 gripper = 0.7
                 neutral = 0.5
                 print("MOVING TO HANDLE")
-            elif np.linalg.norm(obs['achieved_goal'][2] - 0.07) > 0.015 and not open:
-                target = np.array([0.265, -0.06, 0.07])
+            elif np.linalg.norm(obs['achieved_goal'][2] - 0.068) > 0.013 and not open:
+                target = np.array([0.28, -0.06, 0.068])
                 wrist_target = 0 if abs(obs['joints'][4]) < (obs['joints'][4] - 2.6) else 2.6
                 diff = target - obs['achieved_goal']
                 wrist_diff = wrist_target -  obs['joints'][4]
@@ -87,8 +87,8 @@ def scripted_drawer_open(env, data_xyz, data_joint, noise_stds, \
                 gripper = 0.7
                 neutral = 0.5
                 print("LOWERING")
-            elif np.linalg.norm(obs['achieved_goal'][1] + 0.21) > 0.01 and not lift:
-                target = np.array([0.235, -0.24, 0.07])
+            elif np.linalg.norm(obs['achieved_goal'][1] + 0.22) > 0.015 and not lift:
+                target = np.array([0.24, -0.24, 0.07])
                 wrist_target = 0 if abs(obs['joints'][4]) < (obs['joints'][4] - 2.6) else 2.6
                 diff = target - obs['achieved_goal']
                 wrist_diff = wrist_target -  obs['joints'][4]
@@ -99,7 +99,7 @@ def scripted_drawer_open(env, data_xyz, data_joint, noise_stds, \
                 neutral = 0.5
                 print("OPENING")
             elif obs['achieved_goal'][2] - 0.15 < -0.005 and not move_to_grasp:
-                target = np.array([0.14, -0.12, 0.24])
+                target = np.array([0.14, -0.14, 0.24])
                 wrist_target = 0 if abs(obs['joints'][4]) < (obs['joints'][4] - 2.6) else 2.6
                 diff = target - obs['achieved_goal']
                 wrist_diff = wrist_target -  obs['joints'][4]
@@ -118,6 +118,7 @@ def scripted_drawer_open(env, data_xyz, data_joint, noise_stds, \
                 neutral_command = True
                 print("RESETING")
             else:
+                break
                 diff = np.array([0, 0, 0], dtype='float64')
                 wrist_diff = 0
                 gripper_closed = True
@@ -150,8 +151,8 @@ def scripted_drawer_open(env, data_xyz, data_joint, noise_stds, \
         data_xyz.append([obs, action, next_obs, reward, done])
         data_joint.append([obs, info['joint_command'], next_obs, reward, done])
         obs = next_obs
-
-        if done:
+       
+        if done or action[5] < 0:
             env.open_gripper()
             break
 
@@ -191,7 +192,7 @@ def scripted_drawer_grasp(env, data_xyz, data_joint, noise_stds, \
     print(obs['joints'])
     wrist_target = obs['joints'][4] + random_rotate
     images = []
-    vertical_offset = np.random.uniform(0, 0.018) - 0.02
+    vertical_offset = np.random.uniform(0, 0.022) - 0.02
     horizontal_offset = np.random.uniform(0, 0.01) - 0.005
     if np.abs(random_rotate) < 0.3:
         horizontal_offset = np.random.uniform(-0.01, 0.022)
@@ -667,10 +668,11 @@ def main(args):
 
 
     if args.checkpoint != "":
+        import railrl.torch.pytorch_util as ptu
+        ptu.set_gpu_mode(True)
         with open(args.checkpoint, 'rb') as f:
     	    params = pickle.load(f)
-        params['evaluation/policy'].stochastic_policy.cpu()
-        policy = params['evaluation/policy'].get_action
+        policy = params['trainer/trainer'].policy.get_action
         params = None
 
     for i in range(args.num_trajectories):
@@ -689,7 +691,7 @@ def main(args):
                 (i%args.video_save_frequency) == 0, policy=policy, policy_rate=args.policy_rate, image_save_dir="")
             env.close_drawer()
         elif args.env in DRAWER_OPEN_ENVS:
-            args.num_timesteps = 20
+            args.num_timesteps = 25
             noise_stds = [args.noise_std*3]*6
             noise_stds[4] = args.noise_std
             scripted_drawer_open(env, data_xyz, data_joint, noise_stds, \
@@ -703,7 +705,7 @@ def main(args):
                 (i%args.video_save_frequency) == 0, policy=policy, policy_rate=args.policy_rate, image_save_dir="")
             if data_xyz[-1][3] != 0:
                 env.lift_object()
-                env.move_to_xyz([0.257, -0.05, 0.17])
+                env.move_to_xyz([0.257, -0.05, 0.18])
                 env.close_gripper()
                 time.sleep(0.5)
                 #env.move_to_background_subtract()
