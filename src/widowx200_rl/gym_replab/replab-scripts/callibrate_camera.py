@@ -9,8 +9,6 @@ import argparse
 ik = InverseKinematics()
 env = gym.make('widowx200-v0')._start_rospy()
 
-depth_image_service = gym_replab.utils.KinectImageService('sd_pts')
-
 def scripted_grasp(env, ik, goal):
     env.set_goal(goal)
     obs = env.reset()
@@ -67,7 +65,8 @@ if __name__ == '__main__':
         while next != 't':
             next = input('Press t to get empty rgb image ')
         image0 = gym_replab.utils.get_image(512, 512)[150:]
-
+    else:
+        depth_image_service = gym_replab.utils.KinectImageService('sd_pts') 
 
     goals = [[0.16, 0.13, 0.065],
     [0.26, 0.13, 0.065],
@@ -122,7 +121,7 @@ if __name__ == '__main__':
         print(matrix)
         residuals = gym_replab.utils.rgb_to_robot_coords(rgb_coords, matrix) - robot_coords
         residuals = [np.linalg.norm(i) for i in residuals]
-        print('Residuals: '
+        print('Residuals: ')
         print(residuals)
 
     if args.option == 'depth' or args.option == 'both':
