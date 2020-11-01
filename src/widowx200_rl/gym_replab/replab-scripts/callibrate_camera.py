@@ -5,6 +5,7 @@ from tqdm import tqdm
 import numpy as np
 import time
 import argparse
+from sklearn.preprocessing import PolynomialFeatures
 
 ik = InverseKinematics()
 env = gym.make('widowx200-v0')._start_rospy()
@@ -59,24 +60,24 @@ if __name__ == '__main__':
     parser.add_argument("-s", "--save_dir", type=str, default="")
     args = parser.parse_args()
 
-    if args.option == 'rgb':
+    if args.option == 'rgb' or args.option ==  'both':
         env.move_to_neutral()
         next = input('Press t to get empty rgb image ')
         while next != 't':
             next = input('Press t to get empty rgb image ')
         image0 = gym_replab.utils.get_image(512, 512)[150:]
-    else:
+    if args.option == 'depth' or args.option == 'both':
         depth_image_service = gym_replab.utils.KinectImageService('sd_pts') 
 
-    goals = [[0.16, 0.13, 0.065],
-    [0.26, 0.13, 0.065],
-    [0.32, 0.13, 0.065],
-    [0.16, -0.03, 0.065],
+    goals = [[0.2, 0.13, 0.065],
+    [0.26, 0.10, 0.065],
+    [0.33, 0.13, 0.065],
+    [0.2, -0.03, 0.065],
     [0.26, -0.03, 0.065],
-    [0.32, -0.03, 0.065],
-    [0.16, -0.18, 0.065],
+    [0.33, -0.03, 0.065],
+    [0.2, -0.18, 0.065],
     [0.26, -0.18, 0.065],
-    [0.32, -0.18, 0.065]]
+    [0.33, -0.18, 0.065]]
     robot_coords = []
     depth_coords = []
     rgb_coords = []
@@ -119,7 +120,7 @@ if __name__ == '__main__':
         matrix = gym_replab.utils.compute_robot_transformation_matrix(np.array(temp), np.array(robot_coords))
         print('RGB to Robot Coordinates Transformation Matrix: ')
         print(matrix)
-        residuals = gym_replab.utils.rgb_to_robot_coords(rgb_coords, matrix) - robot_coords
+        residuals = gym_replab.utils.rgb_to_robot_coords(np.array(rgb_coords), matrix) - np.array(robot_coords)
         residuals = [np.linalg.norm(i) for i in residuals]
         print('Residuals: ')
         print(residuals)
