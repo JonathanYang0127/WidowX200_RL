@@ -8,11 +8,11 @@ import numpy as np
 import os
 
 from widowx200_core.widowx_controller import WidowXController
-
+from widowx200_core.params import WIDOW200_PARAMS, WIDOW250_PARAMS
 
 def start_controller():
     global widowx_controller
-    widowx_controller = WidowXController()
+    widowx_controller = WidowXController(robot_type='wx200')
 
 
 def initialize_publishers_and_subscribers():

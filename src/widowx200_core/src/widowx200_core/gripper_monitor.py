@@ -9,10 +9,18 @@ import time
 
 class WidowXGripper:
 
-    def __init__(self, boundaries=False):
-        self.joints_sub = rospy.Subscriber('/wx200/joint_states', JointState, self.joint_callback)
-        self._gripper_pub = rospy.Publisher('/wx200/single_joint/command', SingleCommand, queue_size=1)
-        self._gripper_desired_sub = rospy.Subscriber('/wx200/single_joint/command', SingleCommand, self.gripper_desired_callback)
+    def __init__(self, robot_type = 'wx200', boundaries=False):
+        self.robot_type = robot_type
+
+        if self.robot_type == 'wx200':
+            self.joints_sub = rospy.Subscriber('/wx200/joint_states', JointState, self.joint_callback)
+            self._gripper_pub = rospy.Publisher('/wx200/single_joint/command', SingleCommand, queue_size=1)
+            self._gripper_desired_sub = rospy.Subscriber('/wx200/single_joint/command', SingleCommand, self.gripper_desired_callback)
+        if self.robot_type='wx250':
+            self.joints_sub = rospy.Subscriber('/wx250/joint_states', JointState, self.joint_callback)
+            self._gripper_pub = rospy.Publisher('/wx250/single_joint/command', SingleCommand, queue_size=1)
+            self._gripper_desired_sub = rospy.Subscriber('/wx250/single_joint/command', SingleCommand, self.gripper_desired_callback)
+
         self._joint_states = None
         self._desired_position = None
         self._desired_position_changed = False
@@ -50,7 +58,6 @@ class WidowXGripper:
         if self._desired_position is None or data.cmd != self._desired_position:
             self._desired_position_changed = True
         self._desired_position = data.cmd
-
 
 def main():
     rospy.init_node("replab_gripper_monitor")
