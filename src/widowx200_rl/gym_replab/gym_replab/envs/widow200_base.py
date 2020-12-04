@@ -27,7 +27,7 @@ class Widow200RealRobotBaseEnv(gym.Env):
         self.joint_space = spaces.Box(low=np.array([-0.6, -0.6, -0.6, -0.6, -0.6]),
                                        high=np.array([0.6, 0.6, 0.6, 0.6, 0.6]), dtype=np.float32)
 
-        self._safety_box = spaces.Box(low=np.array([0.13, -0.26, 0.049]),
+        self._safety_box = spaces.Box(low=np.array([0.13, -0.26, 0.043]),
                                       high=np.array([0.4, 0.16, 0.2]), dtype=np.float32)
 
         self.image_shape = (64, 64)
@@ -133,7 +133,7 @@ class Widow200RealRobotBaseEnv(gym.Env):
             goal[0] = np.random.uniform(low=0.16, high=0.34)
             goal[1] = np.random.uniform(low=goals_1[tmp[1]][0], high=goals_1[tmp[1]][1])
         '''
-        goal[0] = np.random.uniform(low=0.16, high=0.34)
+        goal[0] = np.random.uniform(low=0.2, high=0.36)
         goal[1] = np.random.uniform(low=-0.22, high=0.14) #(-0.22, 0.14)
 
         goal[2] = 0.14

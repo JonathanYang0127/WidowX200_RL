@@ -60,7 +60,7 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
             rospy.sleep(1.0)
             image1 = utils.get_image(512, 512)[150:]
             rospy.sleep(0.5)
-            object_grasped = utils.grasp_success_blob_detector(image0, image1, True)
+            object_grasped = utils.grasp_success_sliding_window(image0, image1, True, save_path=self.image_save_dir)
             if object_grasped:
                 print("****************Object Grasp Succeeded!!!******************")
                 return True
