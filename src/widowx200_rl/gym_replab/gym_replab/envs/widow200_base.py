@@ -261,16 +261,3 @@ class Widow200RealRobotBaseEnv(gym.Env):
         gains["Ki_vel"] = [1920] * 4 + [1000] * 2
         req = FirmwareGainsRequest(*gains.values())
         self.firmware_pid_proxy(req)
-
-    def set_custom_firmware_gains(self, factor):
-        gains = collections.OrderedDict()
-        gains["joint_id"] = 0
-        gains["Kp_pos"] = [int(800 / factor)] * 4 + [640] * 2
-        gains["Ki_pos"] = [0, 0, 0, 0, 0, 0]
-        gains["Kd_pos"] = [0, 0, 0, 0, 3600, 3600]
-        gains["K1"] = [0, 0, 0, 0, 0, 0]
-        gains["K2"] = [0, 0, 0, 0, 0, 0]
-        gains["Kp_vel"] = [200, 200, 200, 200, 100, 100]
-        gains["Ki_vel"] = [1920] * 4 + [1000] * 2
-        req = FirmwareGainsRequest(*gains.values())
-        self.firmware_pid_proxy(req)

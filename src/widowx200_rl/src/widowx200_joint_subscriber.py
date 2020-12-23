@@ -7,12 +7,23 @@ from rospy.numpy_msg import numpy_msg
 import numpy as np
 import os
 
-from widowx200_core.widowx_controller import WidowXController
+import sys
+import argparse
 
 
-def start_controller():
+from widowx200_core.widowx_controller import WidowXPositionController, WidowXVelocityController
+
+
+
+def start_controller(args):
     global widowx_controller
-    widowx_controller = WidowXController()
+
+    if args.control == 'position':
+        widowx_controller = WidowXPositionController()
+    elif args.control == 'velocity':
+        widowx_controller = WidowXVelocityController()
+    else:
+        raise NotImplementedError
 
 
 def initialize_publishers_and_subscribers():
@@ -105,6 +116,11 @@ def neutral_cb(data):
     rospy.sleep(1.5)
 
 if __name__ == '__main__':
-    start_controller()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--control", type=str,
+                        choices=('position', 'velocity'),
+                        default='position')
+    args = parser.parse_args(sys.argv[1:])
+    start_controller(args)
     initialize_publishers_and_subscribers()
     rospy.spin()
