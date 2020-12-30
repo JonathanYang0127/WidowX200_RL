@@ -4,7 +4,7 @@ from ik import InverseKinematics
 import rospy
 from interbotix_sdk.robot_manipulation import InterbotixRobot
 from interbotix_sdk.msg import SingleCommand, JointCommands
-from interbotix_sdk.srv import OperatingModes, OperatingModesRequest, RegisterValues, RegisterValuesRequest
+from interbotix_sdk.srv import OperatingModes, OperatingModesRequest, RegisterValues, RegisterValuesRequest, FirmwareGains, FirmwareGainsRequest
 import collections
 
 
@@ -19,10 +19,24 @@ class WidowXBaseController(object):
 
         rospy.wait_for_service('/wx200/set_operating_modes')
         rospy.wait_for_service('/wx200/set_motor_register_values')
+        rospy.wait_for_service('/wx200/set_firmware_pid_gains')
         self.operating_modes_proxy = rospy.ServiceProxy('/wx200/set_operating_modes', OperatingModes)
         self.srv_set_register = rospy.ServiceProxy('/wx200/set_motor_register_values', RegisterValues)
+        self.firmware_pid_proxy = rospy.ServiceProxy('/wx200/set_firmware_pid_gains', FirmwareGains)
         self.use_time = True
 
+    def set_default_firmware_gains(self):
+        gains = collections.OrderedDict()
+        gains["joint_id"] = 0
+        gains["Kp_pos"] = [800, 800, 800, 800, 640, 640]
+        gains["Ki_pos"] = [0, 0, 0, 0, 0, 0]
+        gains["Kd_pos"] = [0, 0, 0, 0, 3600, 3600]
+        gains["K1"] = [0, 0, 0, 0, 0, 0]
+        gains["K2"] = [0, 0, 0, 0, 0, 0]
+        gains["Kp_vel"] = [700, 700, 700, 700, 100, 100]
+        gains["Ki_vel"] = [1920] * 4 + [1000] * 2
+        req = FirmwareGainsRequest(*gains.values())
+        self.firmware_pid_proxy(req)
 
     def set_trajectory_time(self, moving_time=None, accel_time=None):
         if (moving_time != None):
@@ -96,6 +110,7 @@ class WidowXPositionController(WidowXBaseController):
 
         self.operating_modes_proxy(cmd=OperatingModesRequest.ARM_JOINTS, mode='position')
         self.set_trajectory_time(MOVE_WAIT_TIME, ACCEL_TIME)
+        self.set_default_firmware_gains()
 
 
     def move_to_target_joints(self, joint_values):
@@ -113,6 +128,7 @@ class WidowXVelocityController(WidowXBaseController):
 
         self.operating_modes_proxy(cmd=OperatingModesRequest.ARM_JOINTS, mode='velocity')
         self.set_trajectory_time(VEL_MOVE_WAIT_TIME, ACCEL_TIME)
+        self.set_default_firmware_gains()
 
     def move_to_target_joints(self, joint_values, duration=VEL_MOVE_WAIT_TIME, nsteps=30):
         '''
@@ -141,8 +157,8 @@ class WidowXVelocityController(WidowXBaseController):
         '''
         Move arm to neutral position
         '''
-        self.move_to_target_joints(NEUTRAL_JOINTS, duration=10, nsteps=60)
-        rospy.sleep(1.0)
+        self.move_to_target_joints(NEUTRAL_JOINTS, duration=3, nsteps=60)
+        rospy.sleep(1.5)
 
 
     def move_to_reset(self):
@@ -151,8 +167,8 @@ class WidowXVelocityController(WidowXBaseController):
         '''
         #self.move_to_target_joints(RESET_JOINTS_SLACK)
         #rospy.sleep(1.0)
-        self.move_to_target_joints(RESET_JOINTS, duration=10, nsteps=60)
-        rospy.sleep(1.0)
+        self.move_to_target_joints(RESET_JOINTS, duration=3, nsteps=60)
+        rospy.sleep(1.5)
 
 
     def move_to_reset_far(self):
@@ -161,8 +177,8 @@ class WidowXVelocityController(WidowXBaseController):
         '''
         #self.move_to_target_joints(RESET_JOINTS_SLACK)
         #rospy.sleep(1.0)
-        self.move_to_target_joints(RESET_JOINTS_FAR, duration=10, nsteps=60)
-        rospy.sleep(1.0)
+        self.move_to_target_joints(RESET_JOINTS_FAR, duration=3, nsteps=60)
+        rospy.sleep(1.5)
 
 
 if __name__ == '__main__':
