@@ -1,3 +1,2 @@
-rospkg
-python-pcl
-pybullet
+rospkg==1.2.8
+numpy
