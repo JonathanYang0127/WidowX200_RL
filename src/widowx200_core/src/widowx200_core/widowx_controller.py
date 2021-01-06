@@ -33,7 +33,7 @@ class WidowXBaseController(object):
         gains["Kd_pos"] = [0, 0, 0, 0, 3600, 3600]
         gains["K1"] = [0, 0, 0, 0, 0, 0]
         gains["K2"] = [0, 0, 0, 0, 0, 0]
-        gains["Kp_vel"] = [700, 700, 700, 700, 100, 100]
+        gains["Kp_vel"] = [200, 200, 200, 200, 200, 200]
         gains["Ki_vel"] = [1920] * 4 + [1000] * 2
         req = FirmwareGainsRequest(*gains.values())
         self.firmware_pid_proxy(req)
@@ -42,15 +42,15 @@ class WidowXBaseController(object):
         if (moving_time != None):
             self.moving_time = moving_time
             if self.use_time:
-                self.srv_set_register(cmd=RegisterValuesRequest.ARM_JOINTS, addr_name="Profile_Velocity", value=int(moving_time * 1000))
+                self.srv_set_register(cmd=RegisterValuesRequest.ARM_JOINTS, addr_name="Profile_Velocity", value=0*int(moving_time * 1000))
             else:
-                self.srv_set_register(cmd=RegisterValuesRequest.ARM_JOINTS, addr_name="Profile_Velocity", value=int(moving_time))
+                self.srv_set_register(cmd=RegisterValuesRequest.ARM_JOINTS, addr_name="Profile_Velocity", value=0*int(moving_time))
         if (accel_time != None):
             self.accel_time = accel_time
             if self.use_time:
-                self.srv_set_register(cmd=RegisterValuesRequest.ARM_JOINTS, addr_name="Profile_Acceleration", value=int(accel_time * 1000))
+                self.srv_set_register(cmd=RegisterValuesRequest.ARM_JOINTS, addr_name="Profile_Acceleration", value=0*int(accel_time * 1000))
             else:
-                self.srv_set_register(cmd=RegisterValuesRequest.ARM_JOINTS, addr_name="Profile_Acceleration", value=int(accel_time))
+                self.srv_set_register(cmd=RegisterValuesRequest.ARM_JOINTS, addr_name="Profile_Acceleration", value=0*int(accel_time))
 
 
     def enforce_joint_limits(self, joint_values):
@@ -130,7 +130,7 @@ class WidowXVelocityController(WidowXBaseController):
         self.set_trajectory_time(VEL_MOVE_WAIT_TIME, ACCEL_TIME)
         self.set_default_firmware_gains()
 
-    def move_to_target_joints(self, joint_values, duration=VEL_MOVE_WAIT_TIME, nsteps=30):
+    def move_to_target_joints(self, joint_values, duration=VEL_MOVE_WAIT_TIME, nsteps=1):
         '''
         Move arm to specified joint values
         '''
@@ -140,9 +140,9 @@ class WidowXVelocityController(WidowXBaseController):
             current = self._ik.get_joint_angles()[:5]
             error = joint_values - current
             #print(error)
-            ctrl = error * 0.9
+            ctrl = error * 0.99
 
-            max_speed = 1
+            max_speed = 0.8
             ctrl = np.clip(ctrl, -max_speed, max_speed)
             # print('ctrl {}'.format(ctrl))
             ctrl = self.enforce_joint_limits(ctrl)
@@ -151,6 +151,7 @@ class WidowXVelocityController(WidowXBaseController):
             self._last_healthy_tstamp = rospy.get_time()
             rospy.sleep(per_step)
         # self.arm.set_joint_commands(np.zeros(6), moving_time=0.2, accel_time=0.05, delay=0.01)
+        print("stop")
         self._multiple_joints_pub.publish(JointCommands(np.zeros(5)))
 
     def move_to_neutral(self):

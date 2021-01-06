@@ -72,7 +72,6 @@ def take_action(data):
     action = action[:5]
     target_joints = widowx_controller._ik.get_joint_angles()[:5] + action
     widowx_controller.move_to_target_joints(target_joints)
-    rospy.sleep(0.25)
     current_state = np.array(get_state(), dtype=np.float32)
     observation_publisher.publish(current_state)
 
@@ -86,7 +85,7 @@ def move_to_joints(data):
 
 def observation_cb(data):
     current_state = np.array(get_state(), dtype=np.float32)
-    rospy.sleep(1)
+    rospy.sleep(0.01)
     observation_publisher.publish(current_state)
 
 

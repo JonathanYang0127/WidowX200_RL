@@ -41,7 +41,7 @@ class Widow200DrawerEnv(Widow200RealRobotBaseEnv):
         self._gripper_open = 0.6
         self.reward_height_thresh = 0.14
 
-        self._safety_box = spaces.Box(low=np.array([0.13, -0.33, 0.049]),
+        self._safety_box = spaces.Box(low=np.array([0.12, -0.33, 0.049]),
                                       high=np.array([0.4, 0.16, 0.2]), dtype=np.float32)
 
     def _set_action_space(self):
