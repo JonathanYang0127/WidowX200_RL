@@ -10,6 +10,7 @@ import os
 from widowx200_core.widowx_controller import WidowXController
 from widowx200_core.params import WIDOW200_PARAMS, WIDOW250_PARAMS
 
+
 def start_controller():
     global widowx_controller
     widowx_controller = WidowXController(robot_type='wx200')
@@ -40,9 +41,9 @@ def initialize_publishers_and_subscribers():
 
 
 def get_state():
-    '''
+    """
     Gets the current state of the arm: [cartesian pose, joints]
-    '''
+    """
     pos = list(widowx_controller._ik.get_cartesian_pose())[:3]
     joints = list(widowx_controller._ik.get_joint_angles())
     pos.extend(joints)
@@ -80,8 +81,8 @@ def observation_cb(data):
 
 
 def reset(data):
-    #widowx_controller.move_to_neutral()
-    #rospy.sleep(1.5)
+    # widowx_controller.move_to_neutral()
+    # rospy.sleep(1.5)
     if 'FAR_POSITION' in data.data:
         widowx_controller.move_to_reset_far()
         rospy.sleep(1.0)
@@ -90,7 +91,7 @@ def reset(data):
         rospy.sleep(1.0)
     if not "NO_GRIPPER" in data.data:
         while widowx_controller._ik.get_joint_angles()[5] < 1.6:
-             widowx_controller.open_gripper()
+            widowx_controller.open_gripper()
 
 
 def gripper_cb(data):
@@ -103,6 +104,7 @@ def gripper_cb(data):
 def neutral_cb(data):
     widowx_controller.move_to_neutral()
     rospy.sleep(1.5)
+
 
 if __name__ == '__main__':
     start_controller()

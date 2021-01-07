@@ -16,7 +16,7 @@ class WidowXGripper:
             self.joints_sub = rospy.Subscriber('/wx200/joint_states', JointState, self.joint_callback)
             self._gripper_pub = rospy.Publisher('/wx200/single_joint/command', SingleCommand, queue_size=1)
             self._gripper_desired_sub = rospy.Subscriber('/wx200/single_joint/command', SingleCommand, self.gripper_desired_callback)
-        if self.robot_type='wx250':
+        if self.robot_type == 'wx250':
             self.joints_sub = rospy.Subscriber('/wx250/joint_states', JointState, self.joint_callback)
             self._gripper_pub = rospy.Publisher('/wx250/single_joint/command', SingleCommand, queue_size=1)
             self._gripper_desired_sub = rospy.Subscriber('/wx250/single_joint/command', SingleCommand, self.gripper_desired_callback)
