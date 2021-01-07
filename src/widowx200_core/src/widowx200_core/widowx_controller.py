@@ -14,7 +14,7 @@ class WidowXController:
             self._single_joint_pub = rospy.Publisher('/wx200/single_joint/command', SingleCommand, queue_size = 1)
             self._multiple_joints_pub = rospy.Publisher('/wx200/joint/commands', JointCommands, queue_size = 1)
             self.robot_params = WIDOW200_PARAMS
-        elif self.robot_type == 'wx250':
+        elif self.robot_type == 'wx250s':
             self._single_joint_pub = rospy.Publisher('/wx250/single_joint/command', SingleCommand, queue_size = 1)
             self._multiple_joints_pub = rospy.Publisher('/wx250/joint/commands', JointCommands, queue_size = 1)
             self.robot_params = WIDOW250_PARAMS
