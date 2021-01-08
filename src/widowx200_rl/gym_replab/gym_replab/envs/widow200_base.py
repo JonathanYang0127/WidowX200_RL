@@ -31,8 +31,8 @@ class Widow200RealRobotBaseEnv(gym.Env):
                                       high=np.array([0.4, 0.16, 0.2]), dtype=np.float32)
 
         self.image_shape = (64, 64)
-        self.observation_space = Dict({'state': spaces.Box(low=np.array([-3.0, -3.0, -3.0, -3.0, -3.0, -3.0]),
-                                      high=np.array([3.0, 3.0, 3.0, 3.0, 3.0, 3.0]), dtype=np.float32),
+        self.observation_space = Dict({'state': spaces.Box(low=np.array([-3.0] * 9),
+                                      high=np.array([3.0] * 9), dtype=np.float32),
                                       'image': spaces.Box(low=np.array([0]*self.image_shape[0]*self.image_shape[1]*3),
                                             high=np.array([255]*self.image_shape[0]*self.image_shape[1]*3), dtype=np.float32)})
 
@@ -46,6 +46,7 @@ class Widow200RealRobotBaseEnv(gym.Env):
         self.ik = InverseKinematics()
 
         self.image_save_dir = ""
+        self.num_joints = 6
 
 
     def _set_action_space(self):
@@ -103,9 +104,9 @@ class Widow200RealRobotBaseEnv(gym.Env):
 
 
     def move_to_xyz(self, pos, wrist = None, wait = 1):
-        ik_command = self.ik._calculate_ik(pos, self.quat)[0][:5]
+        ik_command = self.ik._calculate_ik(pos, self.quat)[0][:self.num_joints - 1]
         if wrist is not None:
-            ik_command[4] = wrist
+            ik_command[self.num_joints - 2] = wrist
         try:
             self.joint_publisher.publish(np.array(ik_command, dtype='float32'))
             self.current_pos = np.array(rospy.wait_for_message(
@@ -137,7 +138,7 @@ class Widow200RealRobotBaseEnv(gym.Env):
         goal[1] = np.random.uniform(low=-0.22, high=0.14) #(-0.22, 0.14)
 
         goal[2] = 0.14
-        ik_command = self.ik._calculate_ik(goal, self.quat)[0][:5]
+        ik_command = self.ik._calculate_ik(goal, self.quat)[0][:self.num_joints - 1]
         while True:
             try:
                 self.joint_publisher.publish(np.array(ik_command, dtype='float32'))
@@ -151,7 +152,7 @@ class Widow200RealRobotBaseEnv(gym.Env):
 
 
     def open_gripper(self):
-        while self.current_pos[8] < 1.2:
+        while self.current_pos[2 + self.num_joints] < 1.2:
             self.gripper_publisher.publish("OPEN")
             rospy.sleep(1)
             try:
@@ -274,3 +275,16 @@ class Widow200RealRobotBaseEnv(gym.Env):
         gains["Ki_vel"] = [1920] * 4 + [1000] * 2
         req = FirmwareGainsRequest(*gains.values())
         self.firmware_pid_proxy(req)
+
+
+class Widow250RealRobotBaseEnv(Widow200RealRobotBaseEnv):
+    def __init__(self, **kwargs):
+        super(self, Widow250RealRobotBaseEnv).__init__(**kwargs)
+        self.joint_space = spaces.Box(low=np.array([-0.6, -0.6, -0.6, -0.6, -0.6, -0.6]),
+                                       high=np.array([0.6, 0.6, 0.6, 0.6, 0.6, 0.6]), dtype=np.float32)
+
+        self.observation_space = Dict({'state': spaces.Box(low=np.array([-3.0] * 10),
+                                      high=np.array([3.0] * 10), dtype=np.float32),
+                                      'image': spaces.Box(low=np.array([0]*self.image_shape[0]*self.image_shape[1]*3),
+                                            high=np.array([255]*self.image_shape[0]*self.image_shape[1]*3), dtype=np.float32)})
+        self.num_joints = 7

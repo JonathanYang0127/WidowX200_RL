@@ -10,10 +10,20 @@ import os
 from widowx200_core.widowx_controller import WidowXController
 from widowx200_core.params import WIDOW200_PARAMS, WIDOW250_PARAMS
 
+import sys
+import argparse
 
-def start_controller():
-    global widowx_controller
-    widowx_controller = WidowXController(robot_type='wx200')
+
+def start_controller(args):
+    global widowx_controller, robot_params
+    widowx_controller = WidowXController(robot_type=args.robot)
+    if args.robot == 'wx200':
+        robot_params = WIDOW200_PARAMS
+    elif args.robot == 'wx250s':
+        robot_params = WIDOW250_PARAMS
+    else:
+        raise NotImplementedError
+
 
 
 def initialize_publishers_and_subscribers():
@@ -55,12 +65,14 @@ def take_action(data):
     Action [joint_1, joint_2, joint_3, joint_4, joint_5, gripper_joint]
     """
     action = data.data
-    assert action.shape[0] == 6 or action.shape[0] == 5
-    if action.shape[0] == 6:
+    num_joints = robot_params['NUM_JOINTS']
+
+    assert action.shape[0] == num_joints or action.shape[0] == num_joints - 1
+    if action.shape[0] == num_joints:
         gripper_action = action[-1]
         widowx_controller.move_gripper(gripper_action * 3)
-    action = action[:5]
-    target_joints = widowx_controller._ik.get_joint_angles()[:5] + action
+    action = action[:num_joints - 1]
+    target_joints = widowx_controller._ik.get_joint_angles()[:num_joints - 1] + action
     widowx_controller.move_to_target_joints(target_joints)
     rospy.sleep(0.25)
     current_state = np.array(get_state(), dtype=np.float32)
@@ -90,7 +102,7 @@ def reset(data):
         widowx_controller.move_to_reset()
         rospy.sleep(1.0)
     if not "NO_GRIPPER" in data.data:
-        while widowx_controller._ik.get_joint_angles()[5] < 1.6:
+        while widowx_controller._ik.get_joint_angles()[robot_params['NUM_JOINTS']] < 1.6:
             widowx_controller.open_gripper()
 
 
@@ -107,6 +119,11 @@ def neutral_cb(data):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-r", "--robot", type=str,
+                        choices=('wx200', 'wx250s'),
+                        default='wx250s')
+    args = parser.parse_args(sys.argv[1:])
     start_controller()
     initialize_publishers_and_subscribers()
     rospy.spin()

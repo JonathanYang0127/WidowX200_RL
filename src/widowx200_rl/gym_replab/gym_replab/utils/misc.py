@@ -47,7 +47,9 @@ def compute_ik_command(action, low_clip, high_clip, quat=None, ik = None):
     return compute_ik_solution(pos, quat, low_clip, high_clip, ik)
 
 def compute_ik_solution(pos, quat, low_clip, high_clip, ik):
-    ik_command = ik._calculate_ik(pos, quat)[0][:5] - ik.get_joint_angles()[:5]
+    num_joints_excluding_gripper = len(low_clip)
+    ik_command = ik._calculate_ik(pos, quat)[0][:num_joints_excluding_gripper] -
+        ik.get_joint_angles()[:num_joints_excluding_gripper]
 
     ik_command /= 3.5
     if low_clip is not None:
