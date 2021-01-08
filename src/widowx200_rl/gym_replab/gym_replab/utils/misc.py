@@ -8,8 +8,8 @@ import pickle
 from distutils.util import strtobool
 import math
 import time
-#from .color_pc_clusters import *
-#from .kinect_image_service import *
+# from .color_pc_clusters import *
+# from .kinect_image_service import *
 from math import asin, sin, cos, sqrt, acos
 
 
@@ -35,7 +35,7 @@ def clip_action(diff):
     return diff
 
 
-def compute_ik_command(action, low_clip, high_clip, quat=None, ik = None):
+def compute_ik_command(action, low_clip, high_clip, quat=None, ik=None):
     action = np.array(action, dtype=np.float32)
     action /= 5
     pose = ik.get_cartesian_pose()
@@ -46,15 +46,16 @@ def compute_ik_command(action, low_clip, high_clip, quat=None, ik = None):
 
     return compute_ik_solution(pos, quat, low_clip, high_clip, ik)
 
+
 def compute_ik_solution(pos, quat, low_clip, high_clip, ik):
     num_joints_excluding_gripper = len(low_clip)
-    ik_command = ik._calculate_ik(pos, quat)[0][:num_joints_excluding_gripper] -
-        ik.get_joint_angles()[:num_joints_excluding_gripper]
+    ik_command = ik._calculate_ik(pos, quat)[0][:num_joints_excluding_gripper] \
+                 - ik.get_joint_angles()[:num_joints_excluding_gripper]
 
     ik_command /= 3.5
     if low_clip is not None:
-        ik_command = np.clip(np.array(ik_command, dtype=np.float32), \
-            low_clip, high_clip)
+        ik_command = np.clip(np.array(ik_command, dtype=np.float32),
+                             low_clip, high_clip)
 
     for i in range(len(ik_command)):
         if abs(ik_command[i]) < 0.001:
@@ -62,17 +63,21 @@ def compute_ik_solution(pos, quat, low_clip, high_clip, ik):
 
     return ik_command
 
+
 def timestamp(divider='-', datetime_divider='T'):
     now = datetime.datetime.now()
     return now.strftime(
         '%Y{d}%m{d}%dT%H{d}%M{d}%S'
         ''.format(d=divider, dtd=datetime_divider))
 
+
 def str2bool(x):
     return bool(strtobool(x))
 
+
 def get_rgb_image(kinect_image_service):
     return kinect_image_service.pull_image()
+
 
 def get_center_and_second_pc(kinect_image_service):
     try:
@@ -81,21 +86,26 @@ def get_center_and_second_pc(kinect_image_service):
     except:
         return None
 
+
 def get_random_center_rgb(image0, num_objects=1, save_dir=""):
     image1 = get_image(512, 512)[150:]
     try:
-        centroids = get_rgb_centroids(image0, image1, num_objects, save_dir=save_dir)
+        centroids = get_rgb_centroids(image0, image1, num_objects,
+                                      save_dir=save_dir)
         return rgb_to_robot_coords(centroids)[np.random.choice(num_objects)]
     except:
         return None
+
 
 def get_pc_object_center(kinect_image_service):
     kinect_image_service.pull_image()
     return get_pc_cluster_center()
 
+
 def check_if_object_grasped_pc(kinect_image_service):
     kinect_image_service.pull_image()
     return compute_center_and_pc() is None
+
 
 def true_angle_diff(theta):
     """theta is before the absolute value is applied"""
@@ -106,24 +116,31 @@ class SafetyBox:
     def __init__(self):
         self.safety_box_low = np.array([-0.245, -0.225, 0.365], dtype='float32')
         self.safety_box_high = np.array([0.245, 0.225, 0.424], dtype='float32')
-        self.action_space_low = 4 * np.array([-0.02, -0.01, -0.02, 0.0], dtype='float32')
-        self.action_space_high = 4 * np.array([0.02, 0.01, 0.02, 0.5], dtype='float32')
+        self.action_space_low = 4 * np.array([-0.02, -0.01, -0.02, 0.0],
+                                             dtype='float32')
+        self.action_space_high = 4 * np.array([0.02, 0.01, 0.02, 0.5],
+                                              dtype='float32')
 
     def clip_action(self, action):
-        action = np.clip(np.array(action, dtype=np.float32), self.action_space_low, self.action_space_high)
+        action = np.clip(np.array(action, dtype=np.float32),
+                         self.action_space_low, self.action_space_high)
         return action
 
     def enforce_safety_box(self, pose, action):
         curr_xyz_pos = pose[:3]
-        clipped_commanded_next_xyz_pos = np.clip(curr_xyz_pos[:3] + action[:3], self.safety_box_low, self.safety_box_high)
+        clipped_commanded_next_xyz_pos = np.clip(curr_xyz_pos[:3] + action[:3],
+                                                 self.safety_box_low,
+                                                 self.safety_box_high)
         clipped_action = clipped_commanded_next_xyz_pos - curr_xyz_pos[:3]
-        return np.append(clipped_action, np.array([[action[3]]], dtype='float32'))
+        return np.append(clipped_action,
+                         np.array([[action[3]]], dtype='float32'))
 
 
 class DemoPool:
 
     def __init__(self, max_size=1e6):
-        self._keys = ('observations', 'actions', 'next_observations', 'rewards', 'terminals')
+        self._keys = (
+        'observations', 'actions', 'next_observations', 'rewards', 'terminals')
         self._fields = {}
         self._max_size = int(max_size)
         self._size = 0
@@ -132,7 +149,6 @@ class DemoPool:
     @property
     def size(self):
         return self._size
-
 
     def add_sample(self, *arrays):
         if self._size:
@@ -177,6 +193,7 @@ class DemoPool:
     def get_samples(self):
         self._prune()
         return self._fields
+
 
 class Meta:
 

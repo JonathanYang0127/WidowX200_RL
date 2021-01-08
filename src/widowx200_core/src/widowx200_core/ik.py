@@ -3,25 +3,23 @@ from threading import Lock
 import numpy as np
 import pybullet as p
 import rospy
-from params import WIDOW200_PARAMS, WIDOW250_PARAMS
 from sensor_msgs.msg import JointState
 from widowx200_core.params import *
 
 
 class InverseKinematics():
-    def __init__(self, robot_type='wx200'):
+    def __init__(self, robot_params, robot_type='wx200'):
         p.connect(p.DIRECT)
-
+        self.robot_params = robot_params
         self.robot_type = robot_type
+
         if self.robot_type == 'wx200':
             widow_x_urdf = '/'.join(
                 __file__.split('/')[:-1]) + '/../../widowx200_urdf/wx200.urdf'
-            self.robot_params = WIDOW200_PARAMS
             self.ee_link_index = 5
         elif self.robot_type == 'wx250s':
             widow_x_urdf = '/'.join(
                 __file__.split('/')[:-1]) + '/../../widowx200_urdf/wx250s.urdf'
-            self.robot_params = WIDOW250_PARAMS
             self.ee_link_index = 6
         else:
             raise NotImplementedError

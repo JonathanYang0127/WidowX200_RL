@@ -27,7 +27,8 @@ class WidowXController:
             raise NotImplementedError
         rospy.sleep(2.0)
 
-        self._ik = InverseKinematics(robot_type=self.robot_type)
+        self._ik = InverseKinematics(self.robot_params,
+                                     robot_type=self.robot_type)
 
     def move_to_target_joints(self, joint_values):
         """

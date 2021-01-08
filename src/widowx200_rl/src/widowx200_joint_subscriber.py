@@ -124,6 +124,6 @@ if __name__ == '__main__':
                         choices=('wx200', 'wx250s'),
                         default='wx250s')
     args = parser.parse_args(sys.argv[1:])
-    start_controller()
+    start_controller(args)
     initialize_publishers_and_subscribers()
     rospy.spin()
