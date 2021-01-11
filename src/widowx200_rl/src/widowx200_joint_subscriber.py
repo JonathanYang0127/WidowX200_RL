@@ -102,7 +102,8 @@ def reset(data):
         widowx_controller.move_to_reset()
         rospy.sleep(1.0)
     if not "NO_GRIPPER" in data.data:
-        while widowx_controller._ik.get_joint_angles()[robot_params['NUM_JOINTS']] < 1.6:
+        last_angle = widowx_controller._ik.get_joint_angles()[-1]
+        while last_angle < 1.6:
             widowx_controller.open_gripper()
 
 

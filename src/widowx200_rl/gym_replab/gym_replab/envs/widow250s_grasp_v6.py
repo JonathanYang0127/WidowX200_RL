@@ -96,12 +96,15 @@ class Widow250RealRobotGraspV6Env(Widow250RealRobotBaseEnv):
             obs['gripper'] = self.current_pos[2 + self.num_joints]
             obs['image'] = self.pull_image()
             obs['render'] = self.render()
-            obs['state'] = self.current_pos[3:3 + self.num_joints]
         elif self._obs_mode == 'pixel_state':
             obs['image'] = self.pull_image()
             obs['state'] = self.current_pos[3:3 + self.num_joints]
         elif self._obs_mode == 'pixels':
             obs['image'] = self.pull_image()
+        elif self._obs_mode == 'state':
+            obs['state'] = self.current_pos[:]
+        else:
+            raise NotImplementedError
         return obs
 
     def _gripper_simulate(self, gripper_action):
