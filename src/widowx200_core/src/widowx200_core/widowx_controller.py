@@ -1,78 +1,94 @@
 #!/usr/bin/env python
-from params import *
-from ik import InverseKinematics
 import rospy
+from ik import InverseKinematics
 from interbotix_sdk.msg import SingleCommand, JointCommands
+from params import WIDOW200_PARAMS, WIDOW250_PARAMS
 
 
 class WidowXController:
-    def __init__(self):
+    def __init__(self, robot_type='wx200'):
         rospy.init_node('widowx_controller')
-        self._single_joint_pub = rospy.Publisher('/wx200/single_joint/command', SingleCommand, queue_size = 1)
-        self._multiple_joints_pub = rospy.Publisher('/wx200/joint/commands', JointCommands, queue_size = 1)
+
+        self.robot_type = robot_type
+        if self.robot_type == 'wx200':
+            self._single_joint_pub = rospy.Publisher(
+                '/wx200/single_joint/command', SingleCommand, queue_size=1)
+            self._multiple_joints_pub = rospy.Publisher('/wx200/joint/commands',
+                                                        JointCommands,
+                                                        queue_size=1)
+            self.robot_params = WIDOW200_PARAMS
+        elif self.robot_type == 'wx250s':
+            self._single_joint_pub = rospy.Publisher(
+                '/wx250s/single_joint/command', SingleCommand, queue_size=1)
+            self._multiple_joints_pub = rospy.Publisher(
+                '/wx250s/joint/commands', JointCommands, queue_size=1)
+            self.robot_params = WIDOW250_PARAMS
+        else:
+            raise NotImplementedError
         rospy.sleep(2.0)
 
-        self._ik = InverseKinematics()
-
+        self._ik = InverseKinematics(self.robot_params,
+                                     robot_type=self.robot_type)
 
     def move_to_target_joints(self, joint_values):
-        '''
+        """
         Move arm to specified joint values
-        '''
-        joint_command = [0, 0, 0, 0, 0]
-        for i in range(5):
-            joint_command[i] = max(joint_values[i], JOINT_MIN[i])
-            joint_command[i] = min(joint_values[i], JOINT_MAX[i])
+        """
+        joint_command = [0] * (self.robot_params['NUM_JOINTS'] - 1)
+        for i in range(self.robot_params['NUM_JOINTS'] - 1):
+            joint_command[i] = max(joint_values[i],
+                                   self.robot_params['JOINT_MIN'][i])
+            joint_command[i] = min(joint_values[i],
+                                   self.robot_params['JOINT_MAX'][i])
         self._multiple_joints_pub.publish(JointCommands(joint_command))
-        rospy.sleep(MOVE_WAIT_TIME)
-
+        rospy.sleep(self.robot_params['MOVE_WAIT_TIME'])
 
     def move_to_neutral(self):
-        '''
+        """
         Move arm to neutral position
-        '''
-        self.move_to_target_joints(NEUTRAL_JOINTS)
-
+        """
+        self.move_to_target_joints(self.robot_params['NEUTRAL_JOINTS'])
 
     def move_to_reset(self):
-        '''
+        """
         Move arm to reset position
-        '''
-        #self.move_to_target_joints(RESET_JOINTS_SLACK)
-        #rospy.sleep(1.0)
-        self.move_to_target_joints(RESET_JOINTS)
-
+        """
+        # self.move_to_target_joints(RESET_JOINTS_SLACK)
+        # rospy.sleep(1.0)
+        self.move_to_target_joints(self.robot_params['RESET_JOINTS'])
 
     def move_to_reset_far(self):
-        '''
+        """
         Move arm to far reset position
-        '''
-        #self.move_to_target_joints(RESET_JOINTS_SLACK)
-        #rospy.sleep(1.0)
-        self.move_to_target_joints(RESET_JOINTS_FAR)
-
+        """
+        # self.move_to_target_joints(RESET_JOINTS_SLACK)
+        # rospy.sleep(1.0)
+        self.move_to_target_joints(self.robot_params['RESET_JOINTS_FAR'])
 
     def move_gripper(self, cmd):
         self._single_joint_pub.publish(SingleCommand('gripper', cmd))
-        rospy.sleep(GRIPPER_WAIT_TIME)
-
+        rospy.sleep(self.robot_params['GRIPPER_WAIT_TIME'])
 
     def open_gripper(self):
-        self._single_joint_pub.publish(SingleCommand('gripper', GRIPPER_OPEN))
-        rospy.sleep(GRIPPER_WAIT_TIME)
-
+        self._single_joint_pub.publish(
+            SingleCommand('gripper', self.robot_params['GRIPPER_OPEN']))
+        rospy.sleep(self.robot_params['GRIPPER_WAIT_TIME'])
 
     def close_gripper(self):
-        self._single_joint_pub.publish(SingleCommand('gripper', GRIPPER_CLOSED))
-        rospy.sleep(GRIPPER_WAIT_TIME)
+        self._single_joint_pub.publish(
+            SingleCommand('gripper', self.robot_params['GRIPPER_CLOSED']))
+        rospy.sleep(self.robot_params['GRIPPER_WAIT_TIME'])
 
 
 if __name__ == '__main__':
-    controller = WidowXController()
+    # import IPython; IPython.embed()
+    controller = WidowXController(robot_type='wx250s')
     controller.move_to_neutral()
     controller.open_gripper()
-    rospy.sleep(1.0)
-    controller.close_gripper()
-    rospy.sleep(1.0)
-    #controller.move_to_reset()
-    rospy.spin()
+    import pdb; pdb.set_trace()
+
+    # rospy.sleep(1.0)
+    # controller.close_gripper()
+    # rospy.sleep(1.0)
+    # #controller.move_to_reset()
+    # rospy.spin()

@@ -8,11 +8,22 @@ import numpy as np
 import os
 
 from widowx200_core.widowx_controller import WidowXController
+from widowx200_core.params import WIDOW200_PARAMS, WIDOW250_PARAMS
+
+import sys
+import argparse
 
 
-def start_controller():
-    global widowx_controller
-    widowx_controller = WidowXController()
+def start_controller(args):
+    global widowx_controller, robot_params
+    widowx_controller = WidowXController(robot_type=args.robot)
+    if args.robot == 'wx200':
+        robot_params = WIDOW200_PARAMS
+    elif args.robot == 'wx250s':
+        robot_params = WIDOW250_PARAMS
+    else:
+        raise NotImplementedError
+
 
 
 def initialize_publishers_and_subscribers():
@@ -40,9 +51,9 @@ def initialize_publishers_and_subscribers():
 
 
 def get_state():
-    '''
+    """
     Gets the current state of the arm: [cartesian pose, joints]
-    '''
+    """
     pos = list(widowx_controller._ik.get_cartesian_pose())[:3]
     joints = list(widowx_controller._ik.get_joint_angles())
     pos.extend(joints)
@@ -54,12 +65,14 @@ def take_action(data):
     Action [joint_1, joint_2, joint_3, joint_4, joint_5, gripper_joint]
     """
     action = data.data
-    assert action.shape[0] == 6 or action.shape[0] == 5
-    if action.shape[0] == 6:
+    num_joints = robot_params['NUM_JOINTS']
+
+    assert action.shape[0] == num_joints or action.shape[0] == num_joints - 1
+    if action.shape[0] == num_joints:
         gripper_action = action[-1]
         widowx_controller.move_gripper(gripper_action * 3)
-    action = action[:5]
-    target_joints = widowx_controller._ik.get_joint_angles()[:5] + action
+    action = action[:num_joints - 1]
+    target_joints = widowx_controller._ik.get_joint_angles()[:num_joints - 1] + action
     widowx_controller.move_to_target_joints(target_joints)
     rospy.sleep(0.25)
     current_state = np.array(get_state(), dtype=np.float32)
@@ -80,8 +93,8 @@ def observation_cb(data):
 
 
 def reset(data):
-    #widowx_controller.move_to_neutral()
-    #rospy.sleep(1.5)
+    # widowx_controller.move_to_neutral()
+    # rospy.sleep(1.5)
     if 'FAR_POSITION' in data.data:
         widowx_controller.move_to_reset_far()
         rospy.sleep(1.0)
@@ -89,8 +102,9 @@ def reset(data):
         widowx_controller.move_to_reset()
         rospy.sleep(1.0)
     if not "NO_GRIPPER" in data.data:
-        while widowx_controller._ik.get_joint_angles()[5] < 1.6:
-             widowx_controller.open_gripper()
+        last_angle = widowx_controller._ik.get_joint_angles()[-1]
+        while last_angle < 1.6:
+            widowx_controller.open_gripper()
 
 
 def gripper_cb(data):
@@ -104,7 +118,13 @@ def neutral_cb(data):
     widowx_controller.move_to_neutral()
     rospy.sleep(1.5)
 
+
 if __name__ == '__main__':
-    start_controller()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-r", "--robot", type=str,
+                        choices=('wx200', 'wx250s'),
+                        default='wx250s')
+    args = parser.parse_args(sys.argv[1:])
+    start_controller(args)
     initialize_publishers_and_subscribers()
     rospy.spin()

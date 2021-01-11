@@ -1,31 +1,22 @@
-import gym
-from gym import error, spaces, utils
-from gym.utils import seeding
-from gym.spaces import Dict
+import sys
 
-import os
 import numpy as np
-
 import rospy
+from gym import spaces, utils
+from gym_replab.envs.widow200_base import Widow250RealRobotBaseEnv
 from rospy.numpy_msg import numpy_msg
 from rospy_tutorials.msg import Floats
-from std_msgs.msg import String
-from widowx200_core.ik import InverseKinematics
-from gym_replab.envs.widow200_base import Widow200RealRobotBaseEnv
-import sys
+
 sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages')
-import cv2
 sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 
-import random
 from .. import utils
-
 
 REWARD_FAIL = 0.0
 REWARD_SUCCESS = 1.0
 
 
-class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
+class Widow250RealRobotGraspV6Env(Widow250RealRobotBaseEnv):
     def __init__(self, reward_type='sparse', **kwargs):
         super().__init__(**kwargs)
         self._reward_type = reward_type
@@ -40,56 +31,61 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
         self._gripper_open = 0.6
         self.reward_height_thresh = 0.14
 
-
     def _set_action_space(self):
-        #Normalized action space
+        # Normalized action space
         self.action_space = spaces.Box(low=np.array([-1, -1, -1, -1, -1]),
-                                       high=np.array([1, 1, 1, 1, 1]), dtype=np.float32)
+                                       high=np.array([1, 1, 1, 1, 1]),
+                                       dtype=np.float32)
 
     def check_if_object_grasped(self):
         if self._grasp_detector == 'background_subtraction':
             self.move_to_background_subtract()
             rospy.sleep(0.5)
             print("Getting Image")
-            image0 = utils.get_image(512, 512)[150:]            #print( np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])[:2]) )
+            # np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])[:2])
+            image0 = utils.get_image(512, 512)[150:]
             rospy.sleep(0.2)
             self.drop_at_random_location(False)
             self.move_to_background_subtract()
-            #self._image_puller = None
-            #self._image_puller = utils.USBImagePuller()
+            # self._image_puller = None
+            # self._image_puller = utils.USBImagePuller()
             rospy.sleep(1.0)
             image1 = utils.get_image(512, 512)[150:]
             rospy.sleep(0.5)
-            object_grasped = utils.grasp_success_sliding_window(image0, image1, True, save_path=self.image_save_dir)
+            object_grasped = utils.grasp_success_sliding_window(
+                image0, image1, True, save_path=self.image_save_dir)
             if object_grasped:
-                print("****************Object Grasp Succeeded!!!******************")
+                print(
+                    "**************Object Grasp Succeeded!!!*****************")
                 return True
             else:
-                print("****************Object Grasp Failed!!!******************")
+                print(
+                    "****************Object Grasp Failed!!!******************")
                 return False
-        elif grasp_detector == 'depth':
+        elif self._grasp_detector == 'depth':
             if utils.check_if_object_grasped_pc(self.depth_image_service):
-                print("****************Object Grasp Succeeded!!!******************")
+                print(
+                    "***************Object Grasp Succeeded!!!****************")
                 return True
             else:
-                print("****************Object Grasp Failed!!!******************")
+                print(
+                    "****************Object Grasp Failed!!!******************")
                 return False
         else:
             raise NotImplementedError
 
-
     def get_reward(self):
-        if self.current_pos[2] > self.reward_height_thresh and not self._is_gripper_open:
+        if self.current_pos[
+            2] > self.reward_height_thresh and not self._is_gripper_open:
             return REWARD_SUCCESS
         else:
             return REWARD_FAIL
-
 
     def get_observation(self):
         '''
         TODO: Set image obs
         '''
-        #assert self.original_image is not None
+        # assert self.original_image is not None
         obs = {}
 
         if self._obs_mode == 'verbose':
@@ -100,14 +96,16 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
             obs['gripper'] = self.current_pos[2 + self.num_joints]
             obs['image'] = self.pull_image()
             obs['render'] = self.render()
-            obs['state'] =  self.current_pos[3:3 + self.num_joints]
         elif self._obs_mode == 'pixel_state':
             obs['image'] = self.pull_image()
-            obs['state'] =  self.current_pos[3:3 + self.num_joints]
+            obs['state'] = self.current_pos[3:3 + self.num_joints]
         elif self._obs_mode == 'pixels':
             obs['image'] = self.pull_image()
+        elif self._obs_mode == 'state':
+            obs['state'] = self.current_pos[:]
+        else:
+            raise NotImplementedError
         return obs
-
 
     def _gripper_simulate(self, gripper_action):
         '''
@@ -146,7 +144,6 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
 
         return gripper, lift
 
-
     def step(self, action):
         '''
         TODO: Change quaternion based on wrist rotation
@@ -160,12 +157,14 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
         action[2] *= 4
         wrist = action[3]
 
-
         pos = self.ik.get_cartesian_pose()[:3]
         pos += action[:3]
-        pos[2] += self._upwards_bias         #ik has a downwards bias for some reason
-        pos = np.clip(np.array(pos, dtype=np.float32), self._safety_box.low, self._safety_box.high)
-        joint_action = utils.compute_ik_solution(pos, self.quat, self.joint_space.low, self.joint_space.high, self.ik)
+        pos[2] += self._upwards_bias  # ik has a downwards bias for some reason
+        pos = np.clip(np.array(pos, dtype=np.float32), self._safety_box.low,
+                      self._safety_box.high)
+        joint_action = utils.compute_ik_solution(pos, self.quat,
+                                                 self.joint_space.low,
+                                                 self.joint_space.high, self.ik)
         joint_action[self.num_joints - 2] = wrist
 
         gripper, lift = self._gripper_simulate(gripper_command)
@@ -174,10 +173,11 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
 
         try:
             self.current_pos = np.array(rospy.wait_for_message(
-                "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
+                "/widowx_env/action/observation", numpy_msg(Floats),
+                timeout=5).data)
             for i in range(3):
                 if self.current_pos[i] < self._safety_box.low[i] or \
-                    self.current_pos[i] > self._safety_box.high[i]:
+                        self.current_pos[i] > self._safety_box.high[i]:
                     print(i, self.current_pos[i], "SAFETY BOX VIOLATION")
                     return None, None, None, {'timeout': True}
         except:
@@ -192,15 +192,14 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
 
         step_tuple = self._generate_step_tuple()
 
-        #Add joint information to step tuple
-        step_tuple[3]['joint_command'] = np.append(joint_action[:self.num_joints - 1], \
+        # Add joint information to step tuple
+        step_tuple[3]['joint_command'] = np.append(
+            joint_action[:self.num_joints - 1],
             np.array([[gripper_command]], dtype='float32'))
         return step_tuple
 
-
     def set_goal(self, goal):
         self.goal = goal
-
 
     def _generate_step_tuple(self):
         info = {'timeout': False}
@@ -209,8 +208,7 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
 
         return self.get_observation(), reward, False, info
 
-
-    def reset(self, gripper = True):
+    def reset(self, gripper=True):
         self.move_to_neutral()
         if gripper:
             self._is_gripper_open = True
@@ -222,7 +220,8 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
             try:
                 self.get_observation_publisher.publish("GET_OBSERVATION")
                 self.current_pos = np.array(rospy.wait_for_message(
-                "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
+                    "/widowx_env/action/observation", numpy_msg(Floats),
+                    timeout=5).data)
                 break
             except:
                 continue
