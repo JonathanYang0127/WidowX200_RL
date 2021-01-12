@@ -96,7 +96,7 @@ class Widow200DrawerEnv(Widow200RealRobotBaseEnv):
         '''
         #assert self.original_image is not None
         obs = {}
-
+        
         if self._obs_mode == 'verbose':
             obs['observation'] = self.current_pos[:3]
             obs['joints'] = self.current_pos[3:9]
@@ -111,6 +111,8 @@ class Widow200DrawerEnv(Widow200RealRobotBaseEnv):
             obs['state'] =  self.current_pos[:9]
         elif self._obs_mode == 'pixels':
             obs['image'] = self.pull_image()
+        elif self._obs_mode == 'state':
+            obs['state'] = self.current_pos[:9]
         return obs
 
 
