@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from params import *
+
 from ik import InverseKinematics
 import rospy
 from interbotix_sdk.robot_manipulation import InterbotixRobot
@@ -23,7 +24,7 @@ class WidowXBaseController(object):
         self.operating_modes_proxy = rospy.ServiceProxy('/wx200/set_operating_modes', OperatingModes)
         self.srv_set_register = rospy.ServiceProxy('/wx200/set_motor_register_values', RegisterValues)
         self.firmware_pid_proxy = rospy.ServiceProxy('/wx200/set_firmware_pid_gains', FirmwareGains)
-        self.use_time = True
+        self.use_time = False
 
     def set_default_firmware_gains(self):
         gains = collections.OrderedDict()
@@ -39,18 +40,19 @@ class WidowXBaseController(object):
         self.firmware_pid_proxy(req)
 
     def set_trajectory_time(self, moving_time=None, accel_time=None):
+        print(moving_time, accel_time)
         if (moving_time != None):
             self.moving_time = moving_time
             if self.use_time:
-                self.srv_set_register(cmd=RegisterValuesRequest.ARM_JOINTS, addr_name="Profile_Velocity", value=0*int(moving_time * 1000))
+                self.srv_set_register(cmd=RegisterValuesRequest.ARM_JOINTS, addr_name="Profile_Velocity", value=int(moving_time * 1000))
             else:
-                self.srv_set_register(cmd=RegisterValuesRequest.ARM_JOINTS, addr_name="Profile_Velocity", value=0*int(moving_time))
+                self.srv_set_register(cmd=RegisterValuesRequest.ARM_JOINTS, addr_name="Profile_Velocity", value=int(moving_time))
         if (accel_time != None):
             self.accel_time = accel_time
             if self.use_time:
-                self.srv_set_register(cmd=RegisterValuesRequest.ARM_JOINTS, addr_name="Profile_Acceleration", value=0*int(accel_time * 1000))
+                self.srv_set_register(cmd=RegisterValuesRequest.ARM_JOINTS, addr_name="Profile_Acceleration", value=int(accel_time * 1000))
             else:
-                self.srv_set_register(cmd=RegisterValuesRequest.ARM_JOINTS, addr_name="Profile_Acceleration", value=0*int(accel_time))
+                self.srv_set_register(cmd=RegisterValuesRequest.ARM_JOINTS, addr_name="Profile_Acceleration", value=int(accel_time))
 
 
     def enforce_joint_limits(self, joint_values):
@@ -107,9 +109,10 @@ class WidowXBaseController(object):
 class WidowXPositionController(WidowXBaseController):
     def __init__(self):
         super(WidowXPositionController, self).__init__()
+        print("HI")
 
-        self.operating_modes_proxy(cmd=OperatingModesRequest.ARM_JOINTS, mode='position')
-        self.set_trajectory_time(MOVE_WAIT_TIME, ACCEL_TIME)
+        self.operating_modes_proxy(cmd=OperatingModesRequest.ARM_JOINTS, mode='position', \
+        use_custom_profiles=True, profile_velocity=131, profile_acceleration=15)
         self.set_default_firmware_gains()
 
 
@@ -127,10 +130,10 @@ class WidowXVelocityController(WidowXBaseController):
         super(WidowXVelocityController, self).__init__()
 
         self.operating_modes_proxy(cmd=OperatingModesRequest.ARM_JOINTS, mode='velocity')
-        self.set_trajectory_time(VEL_MOVE_WAIT_TIME, ACCEL_TIME)
+        self.set_trajectory_time(0, 0)
         self.set_default_firmware_gains()
 
-    def move_to_target_joints(self, joint_values, duration=VEL_MOVE_WAIT_TIME, nsteps=1):
+    def move_to_target_joints(self, joint_values, duration=VEL_MOVE_WAIT_TIME, nsteps=10):
         '''
         Move arm to specified joint values
         '''
@@ -140,7 +143,10 @@ class WidowXVelocityController(WidowXBaseController):
             current = self._ik.get_joint_angles()[:5]
             error = joint_values - current
             #print(error)
-            ctrl = error * 0.99
+            if np.linalg.norm(error) < 0.05:
+                ctrl = error
+            else:
+                ctrl = error / np.linalg.norm(error) / 3
 
             max_speed = 0.8
             ctrl = np.clip(ctrl, -max_speed, max_speed)
