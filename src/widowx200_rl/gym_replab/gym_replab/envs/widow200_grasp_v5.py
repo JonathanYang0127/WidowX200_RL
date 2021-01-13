@@ -167,7 +167,7 @@ class Widow200RealRobotGraspV5Env(Widow200RealRobotBaseEnv):
         terminate = action[5] > 0.5
 
         action /= 3
-        action[2] *= 4      
+        action[2] *= 4
         wrist = action[3]
 
 
@@ -230,7 +230,8 @@ class Widow200RealRobotGraspV5Env(Widow200RealRobotBaseEnv):
         self.move_to_neutral()
         if gripper:
             self._is_gripper_open = True
-            self.reset_publisher.publish("OPEN_GRIPPER")
+            self.reset_publisher.publish("NO_GRIPPER")
+            self.open_gripper()
         else:
             self.reset_publisher.publish("NO_GRIPPER")
         rospy.sleep(1.0)

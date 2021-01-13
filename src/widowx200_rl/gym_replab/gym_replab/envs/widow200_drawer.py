@@ -96,7 +96,7 @@ class Widow200DrawerEnv(Widow200RealRobotBaseEnv):
         '''
         #assert self.original_image is not None
         obs = {}
-        
+
         if self._obs_mode == 'verbose':
             obs['observation'] = self.current_pos[:3]
             obs['joints'] = self.current_pos[3:9]
@@ -237,7 +237,8 @@ class Widow200DrawerEnv(Widow200RealRobotBaseEnv):
         self.move_to_neutral()
         if gripper:
             self._is_gripper_open = True
-            self.reset_publisher.publish("OPEN_GRIPPER")
+            self.reset_publisher.publish("NO_GRIPPER")
+            self.open_gripper()
         else:
             self.reset_publisher.publish("NO_GRIPPER")
         rospy.sleep(1.0)
