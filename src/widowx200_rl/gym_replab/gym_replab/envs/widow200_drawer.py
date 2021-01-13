@@ -235,6 +235,7 @@ class Widow200DrawerEnv(Widow200RealRobotBaseEnv):
         #self.open_gripper()
         self.lift_object()
         self.move_to_neutral()
+
         if gripper:
             self._is_gripper_open = True
             self.reset_publisher.publish("NO_GRIPPER")

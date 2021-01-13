@@ -243,7 +243,8 @@ class Widow200DrawerGraspEnv(Widow200RealRobotBaseEnv):
             self.move_to_neutral()
         if gripper:
             self._is_gripper_open = True
-            self.reset_publisher.publish("FAR_POSITION OPEN_GRIPPER")
+            self.reset_publisher.publish("FAR_POSITION")
+            self.open_gripper()
         else:
             self.reset_publisher.publish("FAR_POSITION NO_GRIPPER")
         rospy.sleep(1.0)
