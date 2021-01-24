@@ -8,7 +8,7 @@ env = gym.make('Widow200Drawer-v0', observation_mode='verbose', reward_type='spa
     grasp_detector='background_subtraction', transpose_image=True)._start_rospy()
 obs = env.reset()
 for i in range(10):
-    images.append(Image.fromarray(np.uint8(obs['render'])))
+    #images.append(Image.fromarray(np.uint8(obs['render'])))
     print(obs['achieved_goal'])
     target = np.array([0.26, -0.07, 0.16])
     wrist_target = 0
@@ -21,7 +21,7 @@ for i in range(10):
     obs = next_obs
 
 for i in range(5):
-    images.append(Image.fromarray(np.uint8(obs['render'])))
+    #images.append(Image.fromarray(np.uint8(obs['render'])))
     print(obs['achieved_goal'])
     target = np.array([0.26, -0.07, 0.08])
     wrist_target = 0
@@ -34,7 +34,7 @@ for i in range(5):
     obs = next_obs
 
 for i in range(10):
-    images.append(Image.fromarray(np.uint8(obs['render'])))
+    #images.append(Image.fromarray(np.uint8(obs['render'])))
     print(obs['achieved_goal'])
     target = np.array([0.26, -0.17, 0.08])
     wrist_target = 0
@@ -49,7 +49,7 @@ for i in range(10):
 
 
 for i in range(10):
-    images.append(Image.fromarray(np.uint8(obs['render'])))
+    #images.append(Image.fromarray(np.uint8(obs['render'])))
     print(obs['achieved_goal'])
     target = np.array([0.14, -0.1, 0.24])
     wrist_target = 0

@@ -45,7 +45,7 @@ def scripted_grasp_v5(env, data_xyz, data_joint, noise_stds):
             sys.exit(0)
 
     goal, object_vector = pc_data
-    goal = np.append(goal, 0.052)
+    goal = np.append(goal[:2], 0.052)
     print(goal)
     #goal[0] += np.random.uniform(low = -0.03, high = 0.03)
     #goal[1] += np.random.uniform(low = -0.03, high = 0.03)
@@ -172,7 +172,7 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, detection_mode, ima
                 sys.exit(0)
 
 
-    goal = np.append(goal, 0.050)
+    goal = np.append(goal[:2], 0.075)
     print(goal)
     #goal[0] += np.random.uniform(low = -0.03, high = 0.03)
     #goal[1] += np.random.uniform(low = -0.03, high = 0.03)
@@ -183,12 +183,13 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, detection_mode, ima
     if goal[0] < 0.22:
         goal[0] -= 0.01
     if goal[1] < -0.03:
-        goal[1] -= 0.02
+        goal[1] -= 0.035
+        goal[2] -= 0.025
     if goal[1] < -0.17:
         goal[1] -= 0.02
     if goal[1] > 0.04:
         goal[1] += 0.02
-    goal[1] += np.random.normal(0, 0.005) #0.015
+    #goal[1] += np.random.normal(0, 0.005) #0.015
 
     goal[2] += np.random.uniform(low = -0.005, high = 0.005)
 
@@ -197,6 +198,7 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, detection_mode, ima
     goal = np.clip(goal, env._safety_box.low, env._safety_box.high)
     env.set_goal(goal)
     obs = env.reset()
+    time.sleep(2.0)
     quat = ik.get_cartesian_pose()[3:]
 
     low_clip = env.action_space.low[:5]
@@ -220,7 +222,7 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, detection_mode, ima
     gripper_closed = False
     for i in range(args.num_timesteps):
         print(i)
-        print("State:", obs['state'][2])
+        print("State:", obs['state'])
         images.append(Image.fromarray(np.uint8(obs['render'])))
         if np.random.rand() < policy_rate:
             print("Checkpoint Policy")

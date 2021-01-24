@@ -33,16 +33,41 @@ class WidowX200EnvJoint(gym.Env):
 
 
     def reset(self, gripper = True):
+        while True:
+            try:
+                self.get_observation_publisher.publish("GET_OBSERVATION")
+                self.current_pos = np.array(rospy.wait_for_message(
+                "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
+                break
+            except:
+                continue
+        self.move_to_neutral()
+        self.reset_publisher.publish("FAR_POSITION NO_GRIPPER")
+        rospy.sleep(1.0)
+        while True:
+            try:
+                self.get_observation_publisher.publish("GET_OBSERVATION")
+                self.current_pos = np.array(rospy.wait_for_message(
+                "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
+                break
+            except:
+                continue
         if gripper:
-            self.reset_publisher.publish("OPEN_GRIPPER")
-        else:
-            self.reset_publisher.publish("NO_GRIPPER")
-        rospy.sleep(3.0)
-        self.get_observation_publisher.publish("GET_OBSERVATION")
-        self.current_pos = np.array(rospy.wait_for_message(
-            "/widowx_env/action/observation", numpy_msg(Floats)).data)
+            self.open_gripper()
         return self._get_obs()
 
+
+    def open_gripper(self):
+        while self.current_pos[8] < 1.2:
+            self.gripper_publisher.publish("OPEN")
+            rospy.sleep(1)
+            try:
+                self.get_observation_publisher.publish("GET_OBSERVATION")
+                self.current_pos = np.array(rospy.wait_for_message(
+                "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
+                self._is_gripper_open = True
+            except:
+                continue
 
     def move_to_neutral(self):
         self.neutral_publisher.publish("MOVE_TO_NEUTRAL")

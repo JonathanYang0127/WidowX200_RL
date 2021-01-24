@@ -112,7 +112,8 @@ class WidowXPositionController(WidowXBaseController):
         print("HI")
 
         self.operating_modes_proxy(cmd=OperatingModesRequest.ARM_JOINTS, mode='position', \
-        use_custom_profiles=True, profile_velocity=131, profile_acceleration=15)
+        use_custom_profiles=True, profile_velocity=60, profile_acceleration=8)
+        #131, 15
         self.set_default_firmware_gains()
 
 

@@ -35,10 +35,10 @@ def scripted_reach_v6(env, data_xyz, data_joint, noise_stds, \
     time.sleep(1.0)
 
     loop_counter = 0
-    goal = np.zeros(3)
-    goal[0] = np.random.uniform(0.2, 0.3)
-    goal[1] = np.random.uniform(-.15, .1)
-    goal[2] = np.random.uniform(0.07, 0.12)
+    goal = np.array([0.3, -0.07, 0.07])
+    #goal[0] = np.random.uniform(0.2, 0.3)
+    #goal[1] = np.random.uniform(-.15, .1)
+    #goal[2] = np.random.uniform(0.07, 0.12)
     print(goal)
     env.set_goal(goal)
     obs = env.reset()
@@ -47,11 +47,13 @@ def scripted_reach_v6(env, data_xyz, data_joint, noise_stds, \
     low_clip = env.action_space.low[:5]
     high_clip = env.action_space.high[:5]
     images = []
+    reduce_noise = False
+    noise_stds = np.array(noise_stds)
 
     for i in range(args.num_timesteps):
         print(obs['achieved_goal'], goal)
         images.append(Image.fromarray(np.uint8(obs['render'])))
-        if np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])) > 0.01:
+        if np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])) > 0.015:
             diff = obs['desired_goal'] - obs['achieved_goal']
             diff *= 6
             #diff[2] /= 3
@@ -68,10 +70,14 @@ def scripted_reach_v6(env, data_xyz, data_joint, noise_stds, \
             wrist_diff = 0
             gripper = 0.7
             reward = 1
+            reduce_noise = True
             print('Done')
 
         action = np.append(diff, [[wrist_diff * 3, gripper]])
-        #action = gym_replab.utils.add_noise_custom(action, noise_stds=noise_stds)
+        if reduce_noise:
+            action = gym_replab.utils.add_noise_custom(action, noise_stds=noise_stds/3)
+        else:
+            action = gym_replab.utils.add_noise_custom(action, noise_stds=noise_stds)
         action = gym_replab.utils.clip_action(action)
 
         next_obs, _, done, info = env.step(action)
