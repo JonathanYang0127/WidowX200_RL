@@ -7,8 +7,8 @@ GRIPPER_OPEN = 1.8
 GRIPPER_CLOSED = -1.0
 NEUTRAL_JOINTS = [1.57, -1.80, -0.62, -2.0, 0.00]
 RESET_JOINTS_SLACK = [1.57, -0.6, -0.62, -1.57, 0.00]
-RESET_JOINTS = [1.57, -0.6, -0.6, -1.57, 1.57]
-RESET_JOINTS_FAR = [1.57, -0.3, -0.3, -1.57, 1.57]
+RESET_JOINTS = [1.57, -0.6, -0.6, -1.57, 0]
+RESET_JOINTS_FAR = [1.57, -0.3, -0.3, -1.57, 0]
 JOINT_MIN = np.array([
     -3.1,
     -1.571,
