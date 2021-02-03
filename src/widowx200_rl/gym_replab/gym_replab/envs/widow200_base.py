@@ -30,7 +30,7 @@ class Widow200RealRobotBaseEnv(gym.Env):
         self._safety_box = spaces.Box(low=np.array([0.12, -0.26, 0.049]),
                                       high=np.array([0.4, 0.16, 0.2]), dtype=np.float32)
 
-        self.image_shape = (64, 64)
+        self.image_shape = (192, 192)#(64, 64)
         self.observation_space = Dict({'state': spaces.Box(low=np.array([-3.0, -3.0, -3.0, -3.0, -3.0, -3.0]),
                                       high=np.array([3.0, 3.0, 3.0, 3.0, 3.0, 3.0]), dtype=np.float32),
                                       'image': spaces.Box(low=np.array([0]*self.image_shape[0]*self.image_shape[1]*3),
