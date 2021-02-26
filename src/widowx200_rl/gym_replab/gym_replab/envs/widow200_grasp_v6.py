@@ -40,6 +40,13 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
         self._gripper_open = 0.6
         self.reward_height_thresh = 0.14
 
+        self.observation_space = Dict(
+            {'state': spaces.Box(low=np.array([-1.0] * 9),
+                                 high=np.array([1.0] * 9), dtype=np.float32),
+             'image': spaces.Box(low=np.array([0] * self.image_shape[0] * self.image_shape[1] * 3),
+                                 high=np.array([255] * self.image_shape[0] * self.image_shape[1] * 3),
+                                 dtype=np.float32)})
+
 
     def _set_action_space(self):
         #Normalized action space
@@ -60,7 +67,7 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
             rospy.sleep(1.0)
             image1 = utils.get_image(512, 512)[150:]
             rospy.sleep(0.5)
-            object_grasped = utils.grasp_success_blob_detector(image0, image1, True)
+            object_grasped = utils.grasp_success_sliding_window(image0, image1, True, self.image_save_dir)
             if object_grasped:
                 print("****************Object Grasp Succeeded!!!******************")
                 return True
@@ -68,7 +75,7 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
                 print("****************Object Grasp Failed!!!******************")
                 return False
         elif grasp_detector == 'depth':
-            if utils.check_if_object_grasped_pc(self.depth_image_service):
+            if utils.check_if_object_graspedg_pc(self.depth_image_service):
                 print("****************Object Grasp Succeeded!!!******************")
                 return True
             else:
@@ -178,8 +185,11 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
             for i in range(3):
                 if self.current_pos[i] < self._safety_box.low[i] or \
                     self.current_pos[i] > self._safety_box.high[i]:
-                    print(i, self.current_pos[i], "SAFETY BOX VIOLATION")
+                    print(i, self._safety_box.low, self.current_pos[i], "SAFETY BOX VIOLATION")
                     return None, None, None, {'timeout': True}
+            if self.current_pos[0] < 0.17 and self.current_pos[2] < 0.11:
+                print(self.current_pos, "SAFETY BOX VIOLATION")
+                return None, None, None, {'timeout': True} 
         except:
             return None, None, None, {'timeout': True}
 
@@ -214,9 +224,9 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
         self.move_to_neutral()
         if gripper:
             self._is_gripper_open = True
-            self.reset_publisher.publish("OPEN_GRIPPER")
+            self.reset_publisher.publish("FAR_POSITION OPEN_GRIPPER")
         else:
-            self.reset_publisher.publish("NO_GRIPPER")
+            self.reset_publisher.publish("FAR_POSITION NO_GRIPPER")
         rospy.sleep(1.0)
         while True:
             try:

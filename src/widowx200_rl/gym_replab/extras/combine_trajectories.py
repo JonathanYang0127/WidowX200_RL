@@ -84,6 +84,7 @@ def combine_data(data_dirs):
             break
 
     if args.batch_size == -1:
+        print(save_dir)
         training_pool.save(['s'], save_dir,
             'combined_training_pool.pkl')
         #validation_pool.save(['s'], save_dir,

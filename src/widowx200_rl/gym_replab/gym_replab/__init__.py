@@ -2,6 +2,7 @@ from gym.envs.registration import register
 import gym
 from . import envs
 from . import utils
+from . import policies
 
 register(id='widowx200-v0',
          entry_point='gym_replab.envs:WidowX200EnvJoint',
@@ -25,6 +26,10 @@ register(id='Widow200RealRobotGraspV6-v0',
 
 register(id='Widow200RealRobotGraspV7-v0',
          entry_point='gym_replab.envs:Widow200RealRobotGraspV7Env',
+         )
+
+register(id='Widow200RealRobotReach-v0',
+         entry_point='gym_replab.envs:Widow200RealRobotReachEnv',
          )
 
 register(id='Widow200ObstacleRemoval-v0',

@@ -111,6 +111,7 @@ def gripper_cb(data):
 
 
 def neutral_cb(data):
+    rospy.sleep(0.5)
     widowx_controller.move_to_neutral()
     rospy.sleep(1.5)
 

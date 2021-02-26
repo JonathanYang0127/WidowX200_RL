@@ -136,6 +136,9 @@ class WidowX200EnvJoint(gym.Env):
             "/widowx_env/neutral", String, queue_size=1)
         self.get_observation_publisher = rospy.Publisher(
             "/widowx_env/get_observation", String, queue_size=1)
+        self.gripper_publisher = rospy.Publisher(
+            "/widowx_env/gripper/command", String, queue_size=1)
+
         rospy.sleep(2.0)
 
         return self

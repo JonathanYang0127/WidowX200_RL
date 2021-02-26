@@ -7,9 +7,7 @@ import argparse
 import os
 import sys
 from PIL import Image
-import torch
 import pickle
-
 
 V5_GRASPING_ENVS = ['Widow200RealRobotGraspV5-v0']
 V6_GRASPING_ENVS = ['Widow200RealRobotGraspV6-v0']
@@ -162,38 +160,46 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, detection_mode, ima
                 sys.exit(0)
         goal, object_vector = pc_data
     elif detection_mode == 'rgb':
-        goal = gym_replab.utils.get_random_center_rgb(image0, num_objects, image_save_dir)
+        goal = gym_replab.utils.get_random_center_rgb(image0, num_objects, image_save_dir)[:2]
         while goal is None or goal[0] >= 0.45:
+            print(goal)
             env.drop_at_random_location()
             env.move_to_neutral()
-            goal = gym_replab.utils.get_random_center_rgb(image0, num_objects, image_save_dir)
+            goal = gym_replab.utils.get_random_center_rgb(image0, num_objects, image_save_dir)[:2]
             loop_counter += 1
             if loop_counter >= 5:
                 sys.exit(0)
 
 
-    goal = np.append(goal[:2], 0.075)
+    goal = np.append(goal[:2], 0.065)
     print(goal)
     #goal[0] += np.random.uniform(low = -0.03, high = 0.03)
     #goal[1] += np.random.uniform(low = -0.03, high = 0.03)
 
-    goal[0] += np.random.normal(0, 0.005)#0.01
-    if goal[0] > 0.3:
-        goal[0] += 0.01
+    goal[0] -= np.random.normal(0, 0.01) + 0.025
+    if goal[0] > 0.29:
+        goal[0] += 0.035
     if goal[0] < 0.22:
-        goal[0] -= 0.01
+        if goal[1] > -0.05 and goal[1] < 0.1:
+            goal[0] += 0.015
+        else:
+            goal[0] -= 0.04
+    if goal[0] < 0.29:
+        goal[0] += 0.01
     if goal[1] < -0.03:
-        goal[1] -= 0.035
-        goal[2] -= 0.025
+        goal[1] -= 0.025
     if goal[1] < -0.17:
         goal[1] -= 0.02
-    if goal[1] > 0.04:
+    if goal[1] > -0.13:
         goal[1] += 0.02
     #goal[1] += np.random.normal(0, 0.005) #0.015
 
     goal[2] += np.random.uniform(low = -0.005, high = 0.005)
-
-
+    if goal[0] < 0.21 and goal[1] > -0.05 and goal[1] < 0.1:
+        goal[0] = 0.2
+    if goal[0] < 0.195:
+        goal[0] = 0.195
+    print(goal)
     print("GOAL HEIGHT: ", goal[2])
     goal = np.clip(goal, env._safety_box.low, env._safety_box.high)
     env.set_goal(goal)
@@ -233,6 +239,7 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, detection_mode, ima
 
         else:
             print("Scripted Policy")
+            reduce_noise = False
             if np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])[:2]) > 0.09 \
                 and not gripper_closed:
                 diff = obs['desired_goal'] - obs['achieved_goal']
@@ -241,14 +248,15 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, detection_mode, ima
                 wrist_diff = wrist_rotate - obs['joints'][4]
                 gripper = 0.7
                 print('Moving to object')
-            elif (abs(obs['desired_goal'][2] - obs['achieved_goal'][2]) > 0.01 \
-                 or np.linalg.norm(obs['desired_goal'] - obs['achieved_goal']) > 0.08) \
-                 and not gripper_closed:
+            elif obs['achieved_goal'][2] - obs['desired_goal'][2] > 0.01 \
+                and not gripper_closed:
+                print(obs['achieved_goal'][2] - obs['desired_goal'][2])
                 diff = obs['desired_goal'] - obs['achieved_goal']
                 diff *= 2
                 diff[2] *= 2
                 wrist_diff = wrist_rotate - obs['joints'][4]
                 gripper = 0.7
+                reduce_noise = True
                 print('Lowering arm')
             elif obs['joints'][5] > 0.3:
                 diff = np.array([0, 0, 0], dtype='float64')
@@ -256,6 +264,7 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, detection_mode, ima
                 wrist_diff = 0
                 gripper_closed = True
                 gripper = -0.7
+                reduce_noise = True
                 print('Grasping object')
             elif obs['achieved_goal'][2] < env.reward_height_thresh + 0.001:
                 diff = np.array([0, 0, 0], dtype='float64')
@@ -269,10 +278,14 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, detection_mode, ima
                 diff *= 5
                 wrist_diff = 0
                 gripper = -0.7
+                reduce_noise = True
                 print('Done!')
 
             action = np.append(diff, [[wrist_diff * 3, gripper]])
-            action = gym_replab.utils.add_noise_custom(action, noise_stds=noise_stds)
+            if reduce_noise:
+                action = gym_replab.utils.add_noise_custom(action, noise_stds=np.array(noise_stds)/1.5)
+            else:
+                action = gym_replab.utils.add_noise_custom(action, noise_stds=noise_stds)
 
 
         action = gym_replab.utils.clip_action(action)
@@ -286,6 +299,7 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, detection_mode, ima
         print("REWARD:", reward)
 
         if info['timeout']:
+            print("HASDASDASD")
             env.open_gripper()
             return None
 
@@ -322,11 +336,11 @@ def scripted_grasp_v7(env, data_xyz, data_joint, noise_stds, detection_mode, ima
                 sys.exit(0)
         goal, object_vector = pc_data
     elif detection_mode == 'rgb':
-        goal = gym_replab.utils.get_random_center_rgb(image0, num_objects, image_save_dir)
+        goal = gym_replab.utils.get_random_center_rgb(image0, num_objects, image_save_dir)[:2]
         while goal is None or goal[0] >= 0.45:
             env.drop_at_random_location()
             env.move_to_neutral()
-            goal = gym_replab.utils.get_random_center_rgb(image0, num_objects, image_save_dir)
+            goal = gym_replab.utils.get_random_center_rgb(image0, num_objects, image_save_dir)[:2]
             loop_counter += 1
             if loop_counter >= 5:
                 sys.exit(0)
@@ -375,9 +389,9 @@ def scripted_grasp_v7(env, data_xyz, data_joint, noise_stds, detection_mode, ima
         except:
             use_robot_state = True
 
-
     gripper_closed = False
     for i in range(args.num_timesteps):
+        neutral = 0.7
         print(i)
         print("State:", obs['state'][2])
         images.append(Image.fromarray(np.uint8(obs['render'])))
@@ -408,12 +422,14 @@ def scripted_grasp_v7(env, data_xyz, data_joint, noise_stds, detection_mode, ima
                 wrist_diff = wrist_rotate - obs['joints'][4]
                 gripper = 0.7
                 print('Lowering arm')
+                reduce_noise = True
             elif obs['joints'][5] > 0.3:
                 diff = np.array([0, 0, 0], dtype='float64')
                 diff *= 5
                 wrist_diff = 0
                 gripper_closed = True
                 gripper = -0.7
+                reduce_noise = True
                 print('Grasping object')
             else:
                 lift_target = np.array([0.23, -0.04, env.reward_height_thresh + 0.02])
@@ -424,7 +440,7 @@ def scripted_grasp_v7(env, data_xyz, data_joint, noise_stds, detection_mode, ima
                 reduce_noise = True
                 print('Lifting object')
 
-            action = np.append(diff, [[wrist_diff * 3, gripper]])
+            action = np.append(diff, [[wrist_diff * 3, gripper, neutral]])
             if reduce_noise:
                 action = gym_replab.utils.add_noise_custom(action, noise_stds=np.array(noise_stds) / 3)
             else:

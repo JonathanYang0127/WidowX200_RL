@@ -36,6 +36,7 @@ def background_subtraction(image0, image1, save_image=False, save_path=""):
     print("canvas", canvas)
 
     if save_image:
+        print("ASDASDASDADASDASDASDASDS", save_path)
         cv2.imwrite(save_path + "/image0.png", image0)
         cv2.imwrite(save_path + "/image1.png", image1)
         cv2.imwrite(save_path + "/rgbdiff.png", diff)
@@ -64,15 +65,14 @@ def is_object_missing(canvas):
     # If midpoint is high, lower PIXEL_DIFF_THRESH.
     return change_in_canvas > adjusted_pixel_diff_thresh
 
-
-def apply_blob_detection(img, save_image = False):
+def apply_blob_detection(img, save_image = False, save_path=""):
     params = cv2.SimpleBlobDetector_Params()
     params.filterByColor = False
     params.filterByArea = True
     params.filterByCircularity = False
     params.filterByInertia = True
     params.filterByConvexity = False
-    params.minArea = 3.14*20*20
+    params.minArea = 3.14*10*10
     params.maxArea= 3.14*70*70
     ver = (cv2.__version__).split('.')
     if int(ver[0]) < 3 :
@@ -84,25 +84,51 @@ def apply_blob_detection(img, save_image = False):
     keypoints = detector.detect(img)
     if save_image:
         img_with_keypoints = cv2.drawKeypoints(img, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-        cv2.imwrite("/home/jonathan/Desktop/Projects/keypoints.png", img_with_keypoints)
+        cv2.imwrite(os.path.join(save_path, "keypoints.png"), img_with_keypoints)
     if len(keypoints) == 1 and keypoints[0].size < 10:
         return False
     return len(keypoints) == 1
 
+def sliding_window_detector(image, num_pixels=10, thresh=800, save_image = False, save_path=""):
+    height, width, c = image.shape
+
+    detected = False
+    for i in range(num_pixels, height - num_pixels):
+        for j in range(num_pixels, width - num_pixels):
+            if np.linalg.norm(np.mean(image[i - num_pixels:i+num_pixels, \
+                j-num_pixels:j+num_pixels], axis=2)) > thresh:
+                image = cv2.circle(image, (j, i), radius=1, color=(0, 0, 255), thickness=1)
+                detected = True
+                break
+        if detected:
+            break
+
+    if save_image:
+        cv2.imwrite(save_path + '/keypoints.png', image)
+    return detected
+
+
+def grasp_success_sliding_window(image0, image1, save_image=False, save_path=""):
+    diff, canvas = background_subtraction(image0, image1, save_image, save_path)
+    return sliding_window_detector(diff, 10, save_image = save_image, save_path=save_path)
+
 
 def grasp_success_blob_detector(image0, image1, save_image=False, save_path=""):
     diff, canvas = background_subtraction(image0, image1, save_image, save_path)
-    return apply_blob_detection(diff, save_image)
+    return apply_blob_detection(diff, save_image, save_path)
 
 
-def grasp_success(image0, image1, save_image=False):
-    diff, canvas = background_subtraction(image0, image1, save_image)
+def grasp_success(image0, image1, save_image=False, save_path=""):
+    diff, canvas = background_subtraction(image0, image1, save_image, save_path)
     return is_object_missing(canvas)
 
 if __name__ == "__main__":
     rospy.init_node('images_service', anonymous=True)
-    rgb_image_service = gym_replab.utils.KinectImageService("rgb", 256)
-    i0 = get_curr_image(rgb_image_service)
-    input("Press Enter to continue...")
-    i1 = get_curr_image(rgb_image_service)
-    print("Was it a Picking Success?", grasp_success(i0, i1))
+    #rgb_image_service = gym_replab.utils.KinectImageService("rgb", 256)
+    #i0 = get_curr_image(rgb_image_service)
+    #input("Press Enter to continue...")
+    #i1 = get_curr_image(rgb_image_service)
+    #print("Was it a Picking Success?", grasp_success(i0, i1))
+    image0 = cv2.imread("/home/jonathan/Desktop/Projects/image0.png")
+    image1 = cv2.imread("/home/jonathan/Desktop/Projects/image1.png")
+    print(grasp_success_sliding_window(image0, image1, True, "/home/jonathan/Desktop/Projects"))

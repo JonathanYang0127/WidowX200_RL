@@ -27,7 +27,7 @@ class Widow200RealRobotBaseEnv(gym.Env):
         self.joint_space = spaces.Box(low=np.array([-0.6, -0.6, -0.6, -0.6, -0.6]),
                                        high=np.array([0.6, 0.6, 0.6, 0.6, 0.6]), dtype=np.float32)
 
-        self._safety_box = spaces.Box(low=np.array([0.12, -0.26, 0.049]),
+        self._safety_box = spaces.Box(low=np.array([0.115, -0.26, 0.049]),
                                       high=np.array([0.4, 0.16, 0.2]), dtype=np.float32)
 
         self.image_shape = (64, 64)
@@ -137,11 +137,11 @@ class Widow200RealRobotBaseEnv(gym.Env):
         #goal[1] = np.random.uniform(low=-0.22, high=0.14) #(-0.22, 0.14)
 
         #goal[2] = 0.14
-        goal_idx = np.random.uniform()
+        goal_idx = 0#np.random.uniform()
         if goal_idx < 0.5:
-            goal = np.array([0.26, -0.12, 0.11])
+            goal = np.array([0.25, -0.12, 0.13])
         else:
-            goal = np.array([0.3, 0.08, 0.11])
+            goal = np.array([0.25, 0.08, 0.13])
         ik_command = self.ik._calculate_ik(goal, self.quat)[0][:5]
         while True:
             try:
