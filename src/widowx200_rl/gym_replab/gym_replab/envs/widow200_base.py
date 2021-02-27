@@ -137,7 +137,7 @@ class Widow200RealRobotBaseEnv(gym.Env):
         #goal[1] = np.random.uniform(low=-0.22, high=0.14) #(-0.22, 0.14)
 
         #goal[2] = 0.14
-        goal_idx = 0#np.random.uniform()
+        goal_idx = np.random.uniform()
         if goal_idx < 0.5:
             goal = np.array([0.25, -0.12, 0.13])
         else:

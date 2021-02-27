@@ -130,7 +130,7 @@ class Widow200RealRobotReachEnv(Widow200RealRobotBaseEnv):
         '''
         action = np.array(action, dtype='float32')
         action = np.clip(action, self.action_space.low, self.action_space.high)
-        gripper_command = action[4]
+        gripper_command = 0.7
 
         action /= 3
         action[2] *= 4

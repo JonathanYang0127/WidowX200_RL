@@ -167,7 +167,6 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
         action[2] *= 4
         wrist = action[3]
 
-
         pos = self.ik.get_cartesian_pose()[:3]
         pos += action[:3]
         pos[2] += self._upwards_bias         #ik has a downwards bias for some reason
