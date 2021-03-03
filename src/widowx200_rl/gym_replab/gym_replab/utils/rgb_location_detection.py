@@ -16,12 +16,14 @@ RGB_TO_ROBOT_TRANSMATRIX = [[ 1.31473611e-01, -2.80861098e-01],
  [-1.46187436e-05,  9.14655889e-04]]
 '''
 
-RGB_TO_ROBOT_TRANSMATRIX = [[ 9.46747106e-02, -3.56980705e-01,  5.25775923e-02],
- [ 1.59043411e-03,  3.55165155e-04,  1.22621806e-04],
- [ 1.36346598e-04,  1.24860376e-03,  7.47934314e-05],
- [-2.37799959e-06, -8.23986275e-08, -2.15886349e-07],
- [-7.87242344e-09, -1.12532330e-06, -1.64063467e-07],
- [-2.18155929e-07, -3.29306373e-07, -8.72173589e-08]]
+RGB_TO_ROBOT_TRANSMATRIX = [[ 6.70841239e-02, -3.11054117e-01],
+ [ 1.81548709e-03, -3.47425843e-04],
+ [ 9.91012915e-05,  1.26975497e-03],
+ [-2.48609728e-06,  3.23229084e-06],
+ [-3.06604485e-07, -1.83108064e-06],
+ [-1.50935749e-07, -1.58926261e-07]]
+
+POINT_EXTRACTION_CUTOFF=40
 
 
 '''
@@ -64,7 +66,7 @@ def extract_points(image, stride=4, threshold=50, save_dir=""):
 
     for i in range(0, height, stride):
         for j in range(0, width, stride):
-            if image[i][j] > threshold:
+            if image[i][j] > threshold and i > POINT_EXTRACTION_CUTOFF:
                 new_image = cv2.circle(new_image, (j, i), radius=1, color=(0, 0, 255), thickness=1)
                 points.append([i, j])
 
@@ -124,7 +126,7 @@ def rgb_to_robot_coords(rgb_coords, transmatrix=RGB_TO_ROBOT_TRANSMATRIX):
 
 
 def extract_points_success_detector(image0, image1):
-    img, canvas = background_subtraction(image0, image1, False)
+    img, canvas = background_subtraction(image0, image1, True)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     img = downsample_average(img, save_dir="")
     points = extract_points(img, 6, 10, save_dir="")

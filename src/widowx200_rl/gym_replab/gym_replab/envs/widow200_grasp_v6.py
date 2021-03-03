@@ -56,7 +56,7 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
     def check_if_object_grasped(self):
         if self._grasp_detector == 'background_subtraction':
             self.move_to_background_subtract()
-            rospy.sleep(0.5)
+            rospy.sleep(1.5)
             print("Getting Image")
             image0 = utils.get_image(512, 512)[150:]            #print( np.linalg.norm((obs['desired_goal'] - obs['achieved_goal'])[:2]) )
             rospy.sleep(0.2)

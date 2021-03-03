@@ -87,6 +87,32 @@ def get_random_center_rgb(image0, num_objects=1, save_dir=""):
     except:
         return None
 
+def get_random_object_center(env, background_image=None, num_objects=1, detection_mode='rgb', save_dir=''):
+    env.move_to_background_subtract()
+    time.sleep(1.0)
+
+    loop_counter = 0
+    if detection_mode == 'depth':
+        pc_data = get_center_and_second_pc(depth_image_service)
+        while pc_data is None or pc_data[0][0] >= 0.45:
+            env.drop_at_random_location()
+            env.move_to_background_subtract()
+            pc_data = get_center_and_second_pc(depth_image_service)
+            loop_counter += 1
+            if loop_counter >= 5:
+                return None
+        goal, object_vector = pc_data
+    elif detection_mode == 'rgb':
+        goal = get_random_center_rgb(background_image, num_objects, save_dir)
+        while goal is None or goal[0] >= 0.45:
+            env.drop_at_random_location()
+            env.move_to_background_subtract()
+            goal = get_random_center_rgb(background_image, num_objects, save_dir)
+            loop_counter += 1
+            if loop_counter >= 5:
+                return None
+    return goal
+
 def get_pc_object_center(kinect_image_service):
     kinect_image_service.pull_image()
     return get_pc_cluster_center()

@@ -145,61 +145,42 @@ def scripted_grasp_v5(env, data_xyz, data_joint, noise_stds):
 
 def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, detection_mode, image0, num_objects, save_video,\
     policy=None, policy_rate=0.5, image_save_dir=""):
-    env.move_to_neutral()
-    time.sleep(1.0)
+    goal = gym_replab.utils.get_random_object_center(env, background_image=image0, num_objects=1, \
+                                                     detection_mode='rgb', save_dir=image_save_dir)
+    if goal is None:
+        sys.exit(0)
 
-    loop_counter = 0
-    if detection_mode == 'depth':
-        pc_data = gym_replab.utils.get_center_and_second_pc(depth_image_service)
-        while pc_data is None or pc_data[0][0] >= 0.45:
-            env.drop_at_random_location()
-            env.move_to_neutral()
-            pc_data = gym_replab.utils.get_center_and_second_pc(depth_image_service)
-            loop_counter += 1
-            if loop_counter >= 5:
-                sys.exit(0)
-        goal, object_vector = pc_data
-    elif detection_mode == 'rgb':
-        goal = gym_replab.utils.get_random_center_rgb(image0, num_objects, image_save_dir)[:2]
-        while goal is None or goal[0] >= 0.45:
-            print(goal)
-            env.drop_at_random_location()
-            env.move_to_neutral()
-            goal = gym_replab.utils.get_random_center_rgb(image0, num_objects, image_save_dir)[:2]
-            loop_counter += 1
-            if loop_counter >= 5:
-                sys.exit(0)
+    goal = goal[:2]
+    goal[0] -= 0.01
+    if goal[0] < 0.205:
+        goal[0] += 0.01
+    if goal[1] > 0:
+        goal[1] += 0.035
+    if goal[1] > 0.04:
+        goal[1] += 0.02
+    if goal[1] > 0.09:
+        goal[1] += 0.015
+    if goal[1] < -0.04:
+        goal[1] -= 0.01
+    if goal[1] < -0.09:
+        goal[1] -= 0.01
+    if goal[1] < -0.14:
+        goal[1] -= 0.01
+    if goal[0] > 0.28:
+        goal[0] += 0.025
+    if goal[0] < 0.21:
+        if goal[1] < -0.015:
+            goal[1] -= 0.02
+        if goal[1] > 0.09:
+            goal[1] += 0.01
+            goal[0] -= 0.01
 
-
+    goal += np.random.normal(0, 0.01, size=(2,))
     goal = np.append(goal[:2], 0.065)
     print(goal)
-    #goal[0] += np.random.uniform(low = -0.03, high = 0.03)
-    #goal[1] += np.random.uniform(low = -0.03, high = 0.03)
+    #goal[0] += np.random.uniform(low = -0.01, high = 0.01)
+    #goal[1] += np.random.uniform(low = -0.01, high = 0.01)
 
-    goal[0] -= np.random.normal(0, 0.01) + 0.025
-    if goal[0] > 0.29:
-        goal[0] += 0.035
-    if goal[0] < 0.22:
-        if goal[1] > -0.05 and goal[1] < 0.1:
-            goal[0] += 0.015
-        else:
-            goal[0] -= 0.04
-    if goal[0] < 0.29:
-        goal[0] += 0.01
-    if goal[1] < -0.03:
-        goal[1] -= 0.025
-    if goal[1] < -0.17:
-        goal[1] -= 0.02
-    if goal[1] > -0.13:
-        goal[1] += 0.02
-    #goal[1] += np.random.normal(0, 0.005) #0.015
-
-    goal[2] += np.random.uniform(low = -0.005, high = 0.005)
-    if goal[0] < 0.21 and goal[1] > -0.05 and goal[1] < 0.1:
-        goal[0] = 0.2
-    if goal[0] < 0.195:
-        goal[0] = 0.195
-    print(goal)
     print("GOAL HEIGHT: ", goal[2])
     goal = np.clip(goal, env._safety_box.low, env._safety_box.high)
     env.set_goal(goal)
@@ -320,30 +301,10 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, detection_mode, ima
 
 def scripted_grasp_v7(env, data_xyz, data_joint, noise_stds, detection_mode, image0, num_objects, \
     save_video, policy=None, policy_rate=0.5, image_save_dir=""):
-
-    env.move_to_neutral()
-    time.sleep(1.0)
-
-    loop_counter = 0
-    if detection_mode == 'depth':
-        pc_data = gym_replab.utils.get_center_and_second_pc(depth_image_service)
-        while pc_data is None or pc_data[0][0] >= 0.45:
-            env.drop_at_random_location()
-            env.move_to_neutral()
-            pc_data = gym_replab.utils.get_center_and_second_pc(depth_image_service)
-            loop_counter += 1
-            if loop_counter >= 5:
-                sys.exit(0)
-        goal, object_vector = pc_data
-    elif detection_mode == 'rgb':
-        goal = gym_replab.utils.get_random_center_rgb(image0, num_objects, image_save_dir)[:2]
-        while goal is None or goal[0] >= 0.45:
-            env.drop_at_random_location()
-            env.move_to_neutral()
-            goal = gym_replab.utils.get_random_center_rgb(image0, num_objects, image_save_dir)[:2]
-            loop_counter += 1
-            if loop_counter >= 5:
-                sys.exit(0)
+    goal = gym_replab.utils.get_random_object_center(env, background_image=image0, num_objects=1, \
+                                                     detection_mode='rgb', save_dir=image_save_dir)
+    if goal is None:
+        sys.exit(0)
 
     goal = np.append(goal, 0.055)
     print(goal)

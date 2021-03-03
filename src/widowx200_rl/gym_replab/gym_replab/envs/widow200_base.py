@@ -80,7 +80,9 @@ class Widow200RealRobotBaseEnv(gym.Env):
     def move_to_background_subtract(self):
         while True:
             try:
-                self.joint_publisher.publish(np.array([1.61, -0.455, -0.333, -1.631, 1.62], dtype='float32'))
+                #self.joint_publisher.publish(np.array([1.61, -0.455, -0.333, -1.631, 1.62], dtype='float32'))
+                self.neutral_publisher.publish("MOVE_TO_NEUTRAL")
+                self.get_observation_publisher.publish("GET_OBSERVATION")
                 self.current_pos = np.array(rospy.wait_for_message(
                     "/widowx_env/action/observation", numpy_msg(Floats), timeout=5).data)
                 rospy.sleep(1.0)

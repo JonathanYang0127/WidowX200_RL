@@ -13,6 +13,7 @@ MASK_DIFF_THRESH = 15
 MIN_PIXEL_DIFF_THRESH = 0.0065 # for far-away objects. Will be scaled up for closer objects.
 CANVAS_DIFF_THRESH = 200 # some value between [0, 255]
 MAX_BYTE_VAL = 255
+SLIDING_WINDOW_CUTOFF=40
 # This threshold is scaled up depending on
 # how close the object is to the camera.
 # % change in canvas grayscale pixel difference
@@ -96,7 +97,8 @@ def sliding_window_detector(image, num_pixels=10, thresh=800, save_image = False
     for i in range(num_pixels, height - num_pixels):
         for j in range(num_pixels, width - num_pixels):
             if np.linalg.norm(np.mean(image[i - num_pixels:i+num_pixels, \
-                j-num_pixels:j+num_pixels], axis=2)) > thresh:
+                j-num_pixels:j+num_pixels], axis=2)) > thresh\
+                and i >SLIDING_WINDOW_CUTOFF :
                 image = cv2.circle(image, (j, i), radius=1, color=(0, 0, 255), thickness=1)
                 detected = True
                 break
