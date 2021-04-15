@@ -92,7 +92,7 @@ def get_rgb_centroids(image0, image1, num_centroids=1, save_dir=""):
     img, canvas = background_subtraction(image0, image1, False)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     img = downsample_average(img, save_dir=save_dir)
-    points = extract_points(img, 6, 50, save_dir=save_dir)
+    points = extract_points(img, 6, 20, save_dir=save_dir)
     centroids = k_means(points, num_centroids)
     if save_dir != "":
         plot_centroids(img, centroids, save_dir)

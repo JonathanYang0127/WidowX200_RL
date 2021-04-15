@@ -122,7 +122,7 @@ class Widow200RealRobotBaseEnv(gym.Env):
         if reset:
             self.reset_publisher.publish("NO_GRIPPER")
             rospy.sleep(1.5)
-        goal = np.array([0, 0, 0], dtype = 'float32')
+        goal = np.array([0, 0, 0], dtype='float32')
 
         '''
         tmp = np.random.choice(2, 2)
@@ -135,15 +135,17 @@ class Widow200RealRobotBaseEnv(gym.Env):
             goal[0] = np.random.uniform(low=0.16, high=0.34)
             goal[1] = np.random.uniform(low=goals_1[tmp[1]][0], high=goals_1[tmp[1]][1])
         '''
-        #goal[0] = np.random.uniform(low=0.16, high=0.34)
-        #goal[1] = np.random.uniform(low=-0.22, high=0.14) #(-0.22, 0.14)
+        goal[0] = np.random.uniform(low=0.18, high=0.35)
+        goal[1] = np.random.uniform(low=-0.20, high=0.14) #(-0.22, 0.14)
 
-        #goal[2] = 0.14
+        goal[2] = 0.13
+        '''
         goal_idx = np.random.uniform()
         if goal_idx < 0.5:
             goal = np.array([0.25, -0.12, 0.13])
         else:
             goal = np.array([0.25, 0.08, 0.13])
+        '''
         ik_command = self.ik._calculate_ik(goal, self.quat)[0][:5]
         while True:
             try:
@@ -240,6 +242,9 @@ class Widow200RealRobotBaseEnv(gym.Env):
             print("Kinect not being used!")
 
         return self
+
+    def augment_rewards(self, rewards):
+        return rewards, dict()
 
 
     def set_default_firmware_gains(self):

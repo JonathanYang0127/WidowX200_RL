@@ -37,7 +37,6 @@ def background_subtraction(image0, image1, save_image=False, save_path=""):
     print("canvas", canvas)
 
     if save_image:
-        print("ASDASDASDADASDASDASDASDS", save_path)
         cv2.imwrite(save_path + "/image0.png", image0)
         cv2.imwrite(save_path + "/image1.png", image1)
         cv2.imwrite(save_path + "/rgbdiff.png", diff)

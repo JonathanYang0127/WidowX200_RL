@@ -2,3 +2,4 @@ rospkg==1.2.8
 python-pcl==0.3.0a1
 numpy==1.18.4
 scikit-image==0.14.2
+pybullet==2.5.5

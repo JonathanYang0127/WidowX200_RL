@@ -151,17 +151,13 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, detection_mode, ima
         sys.exit(0)
 
     goal = goal[:2]
-    goal[0] -= 0.01
-    if goal[0] < 0.205:
-        goal[0] += 0.01
+    goal[0] += 0.01
     if goal[1] > 0:
         goal[1] += 0.035
     if goal[1] > 0.04:
-        goal[1] += 0.02
+        goal[1] += 0.01
     if goal[1] > 0.09:
         goal[1] += 0.015
-    if goal[1] < -0.04:
-        goal[1] -= 0.01
     if goal[1] < -0.09:
         goal[1] -= 0.01
     if goal[1] < -0.14:
@@ -172,11 +168,11 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, detection_mode, ima
         if goal[1] < -0.015:
             goal[1] -= 0.02
         if goal[1] > 0.09:
-            goal[1] += 0.01
-            goal[0] -= 0.01
+            goal[0] += 0.01
 
-    goal += np.random.normal(0, 0.01, size=(2,))
-    goal = np.append(goal[:2], 0.065)
+    goal[0] += np.random.normal(0, 0.02)
+    goal[1] += np.random.normal(0, 0.01)
+    goal = np.append(goal[:2], 0.073 + np.random.uniform(low=0, high=0.002))
     print(goal)
     #goal[0] += np.random.uniform(low = -0.01, high = 0.01)
     #goal[1] += np.random.uniform(low = -0.01, high = 0.01)
@@ -185,6 +181,7 @@ def scripted_grasp_v6(env, data_xyz, data_joint, noise_stds, detection_mode, ima
     goal = np.clip(goal, env._safety_box.low, env._safety_box.high)
     env.set_goal(goal)
     obs = env.reset()
+    print(obs['image'])
     time.sleep(2.0)
     quat = ik.get_cartesian_pose()[3:]
 

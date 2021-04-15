@@ -47,6 +47,9 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
                                  high=np.array([255] * self.image_shape[0] * self.image_shape[1] * 3),
                                  dtype=np.float32)})
 
+        self.failed_rollout_counter = 0
+        self.failed_rollout_thresh = 10
+
 
     def _set_action_space(self):
         #Normalized action space
@@ -224,6 +227,7 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
         if gripper:
             self._is_gripper_open = True
             self.reset_publisher.publish("FAR_POSITION OPEN_GRIPPER")
+            self.open_gripper()
         else:
             self.reset_publisher.publish("FAR_POSITION NO_GRIPPER")
         rospy.sleep(1.0)
@@ -236,3 +240,11 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
             except:
                 continue
         return self.get_observation()
+
+
+    def augment_rewards(self, rewards):
+        if not self.check_if_object_grasped():
+            self.failed_rollout_counter += 1
+            return 0 * rewards, {'grasp_success': False}
+        self.failed_rollout_counter = 0
+        return rewards,  {'grasp_success': True}
