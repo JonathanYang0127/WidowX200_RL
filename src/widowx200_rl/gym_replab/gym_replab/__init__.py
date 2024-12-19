@@ -57,6 +57,14 @@ register(id='Widow200GraspV6-v0',
          entry_point='gym_replab.envs:Widow200GraspV6ProxyEnv',
          )
 
+"""
+Widow250 environments
+"""
+
+register(id='Widow250RealRobotGraspV6-v0',
+         entry_point='gym_replab.envs:Widow250RealRobotGraspV6Env',
+         )
+
 
 def make(id, *args, **kwargs):
     return gym.make(id, *args, **kwargs)

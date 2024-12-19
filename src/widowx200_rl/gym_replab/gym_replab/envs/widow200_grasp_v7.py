@@ -192,7 +192,7 @@ class Widow200RealRobotGraspV7Env(Widow200RealRobotBaseEnv):
             if not moved:
                 return None, None, None, {'timeout': True}
 
-        if neutral < 0:
+        if neutral < 0.5:
             self.move_to_neutral()
             self.reset(gripper=False)
 

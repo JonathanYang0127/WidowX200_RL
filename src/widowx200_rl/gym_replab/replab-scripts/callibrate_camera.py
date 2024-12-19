@@ -69,7 +69,7 @@ if __name__ == '__main__':
     if args.option == 'depth' or args.option == 'both':
         depth_image_service = gym_replab.utils.KinectImageService('sd_pts') 
 
-    goals = [[0.2, 0.13, 0.065],
+    goals = [[0.2, 0.15, 0.065],
     [0.26, 0.10, 0.065],
     [0.33, 0.13, 0.065],
     [0.2, -0.03, 0.065],
@@ -117,10 +117,10 @@ if __name__ == '__main__':
         print(rgb_coords)
         poly = PolynomialFeatures(2)
         temp = poly.fit_transform(rgb_coords)
-        matrix = gym_replab.utils.compute_robot_transformation_matrix(np.array(temp), np.array(robot_coords))
+        matrix = gym_replab.utils.compute_robot_transformation_matrix(np.array(temp), np.array(robot_coords)[:,:2])
         print('RGB to Robot Coordinates Transformation Matrix: ')
         print(matrix)
-        residuals = gym_replab.utils.rgb_to_robot_coords(np.array(rgb_coords), matrix) - np.array(robot_coords)
+        residuals = gym_replab.utils.rgb_to_robot_coords(np.array(rgb_coords), matrix) - np.array(robot_coords)[:,:2]
         residuals = [np.linalg.norm(i) for i in residuals]
         print('Residuals: ')
         print(residuals)

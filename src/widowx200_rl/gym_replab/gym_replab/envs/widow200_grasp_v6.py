@@ -60,7 +60,7 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
             rospy.sleep(1.0)
             image1 = utils.get_image(512, 512)[150:]
             rospy.sleep(0.5)
-            object_grasped = utils.grasp_success_blob_detector(image0, image1, True)
+            object_grasped = utils.grasp_success_sliding_window(image0, image1, True, save_path=self.image_save_dir)
             if object_grasped:
                 print("****************Object Grasp Succeeded!!!******************")
                 return True
@@ -94,16 +94,16 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
 
         if self._obs_mode == 'verbose':
             obs['observation'] = self.current_pos[:3]
-            obs['joints'] = self.current_pos[3:9]
+            obs['joints'] = self.current_pos[3:3 + self.num_joints]
             obs['desired_goal'] = self.goal
             obs['achieved_goal'] = self.current_pos[:3]
-            obs['gripper'] = self.current_pos[8]
+            obs['gripper'] = self.current_pos[2 + self.num_joints]
             obs['image'] = self.pull_image()
             obs['render'] = self.render()
-            obs['state'] =  self.current_pos[:9]
+            obs['state'] =  self.current_pos[3:3 + self.num_joints]
         elif self._obs_mode == 'pixel_state':
             obs['image'] = self.pull_image()
-            obs['state'] =  self.current_pos[:9]
+            obs['state'] =  self.current_pos[3:3 + self.num_joints]
         elif self._obs_mode == 'pixels':
             obs['image'] = self.pull_image()
         return obs
@@ -166,7 +166,7 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
         pos[2] += self._upwards_bias         #ik has a downwards bias for some reason
         pos = np.clip(np.array(pos, dtype=np.float32), self._safety_box.low, self._safety_box.high)
         joint_action = utils.compute_ik_solution(pos, self.quat, self.joint_space.low, self.joint_space.high, self.ik)
-        joint_action[4] = wrist
+        joint_action[self.num_joints - 2] = wrist
 
         gripper, lift = self._gripper_simulate(gripper_command)
 
@@ -193,7 +193,7 @@ class Widow200RealRobotGraspV6Env(Widow200RealRobotBaseEnv):
         step_tuple = self._generate_step_tuple()
 
         #Add joint information to step tuple
-        step_tuple[3]['joint_command'] = np.append(joint_action[:5], \
+        step_tuple[3]['joint_command'] = np.append(joint_action[:self.num_joints - 1], \
             np.array([[gripper_command]], dtype='float32'))
         return step_tuple
 
